@@ -1,4 +1,7 @@
+import { RiCheckLine } from '@remixicon/react'
 import type { Dispatch } from 'react'
+import { Input } from '~/components/ui/input'
+import { Toggle } from '~/components/ui/toggle'
 import { ACTIVITIES, type ActivityType } from '~/domain/activity'
 import { formatList } from '~/domain/format'
 import {
@@ -46,15 +49,16 @@ function Chip({
   onPress: () => void
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={isPicked}
+    <Toggle
+      variant="outline"
+      className="h-11 px-4 text-[15px]"
+      pressed={isPicked}
       disabled={isDisabled}
-      className="chip"
-      onClick={onPress}
+      onPressedChange={onPress}
     >
-      {isPicked ? `✓  ${label}` : label}
-    </button>
+      {isPicked ? <RiCheckLine aria-hidden="true" /> : null}
+      {label}
+    </Toggle>
   )
 }
 
@@ -87,13 +91,13 @@ export function StickerOptionsSection({
 
   return (
     <div>
-      <div className="section-heading-row">
-        <h2 className="section-heading">On the sticker</h2>
-        <span className="section-count">
+      <div className="mt-5 mb-2.5 flex items-baseline justify-between">
+        <h2 className="text-sm font-medium text-muted-foreground">On the sticker</h2>
+        <span className="text-sm text-muted-foreground tabular-nums">
           {`${options.stats.length} of ${MAX_SECONDARY_STATS}`}
         </span>
       </div>
-      <div className="chips">
+      <div className="flex flex-wrap gap-2">
         {chips.map((chip) => (
           <Chip
             key={chip.stat}
@@ -110,9 +114,11 @@ export function StickerOptionsSection({
           onPress={() => dispatch({ type: 'toggle-date' })}
         />
       </div>
-      <p className="hint">{chipHint({ isFull, missing })}</p>
-      <div className="style-row">
-        <span className="field-label">Style</span>
+      <p className="mt-3 min-h-5 text-sm text-muted-foreground">
+        {chipHint({ isFull, missing })}
+      </p>
+      <div className="flex flex-col gap-2.5 border-b border-border py-3.5">
+        <span className="text-base">Style</span>
         <ChoiceChips
           values={STICKER_STYLES}
           labels={STYLE_LABELS}
@@ -122,9 +128,9 @@ export function StickerOptionsSection({
         />
       </div>
       <FieldRow label="Title" hasSeparator>
-        <input
+        <Input
           aria-label="Sticker title"
-          className="field-input title-input"
+          className="h-9 w-48 text-right text-base font-medium"
           value={options.title}
           placeholder={ACTIVITIES[activity].label}
           maxLength={STICKER_TITLE_MAX_LENGTH}

@@ -1,3 +1,5 @@
+import { ToggleGroup, ToggleGroupItem } from '~/components/ui/toggle-group'
+
 export function ChoiceChips<Value extends string>({
   values,
   labels,
@@ -12,19 +14,21 @@ export function ChoiceChips<Value extends string>({
   onChange: (value: Value) => void
 }) {
   return (
-    <div className="choice-chips" role="radiogroup" aria-label={label}>
+    <ToggleGroup
+      aria-label={label}
+      variant="outline"
+      className="flex-wrap"
+      value={[value]}
+      onValueChange={(next: unknown[]) => {
+        const picked = values.find((option) => next.includes(option))
+        if (picked) onChange(picked)
+      }}
+    >
       {values.map((option) => (
-        <button
-          key={option}
-          type="button"
-          role="radio"
-          aria-checked={option === value}
-          className="choice-chip"
-          onClick={() => onChange(option)}
-        >
+        <ToggleGroupItem key={option} value={option} className="h-9 px-3.5">
           {labels[option]}
-        </button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </ToggleGroup>
   )
 }

@@ -1,7 +1,10 @@
 import type { Dispatch, HTMLAttributes } from 'react'
+import { Badge } from '~/components/ui/badge'
+import { Input } from '~/components/ui/input'
 import { ACTIVITIES } from '~/domain/activity'
 import { formatPace, paceStyleOf } from '~/domain/pace'
 import type { Workout } from '~/domain/workout'
+import { cn } from '~/lib/utils'
 import { DateField } from './date-field'
 import { EditorNoticeBanner } from './editor-notice'
 import type {
@@ -31,9 +34,9 @@ function NumberInput({
   dispatch: Dispatch<EditorAction>
 }) {
   return (
-    <input
+    <Input
       aria-label={label}
-      className="field-input"
+      className="h-9 w-32 text-right text-base font-medium tabular-nums"
       value={value}
       placeholder={placeholder}
       inputMode={inputMode}
@@ -72,7 +75,7 @@ export function WorkoutFields({
 
   return (
     <div>
-      <h2 className="section-heading">Workout</h2>
+      <h2 className="mt-1 mb-0.5 text-sm font-medium text-muted-foreground">Workout</h2>
       <EditorNoticeBanner notice={notice} dispatch={dispatch} />
       <FieldRow label="Distance" unit={distanceUnit} error={errors.distance} hasSeparator>
         <NumberInput
@@ -133,8 +136,13 @@ export function WorkoutFields({
         </FieldRow>
       ) : null}
       <FieldRow label={paceStyle.label} unit={paceStyle.unit} hasSeparator={false}>
-        <span className="badge">Auto</span>
-        <span className="computed" data-empty={workout === null || undefined}>
+        <Badge variant="secondary">Auto</Badge>
+        <span
+          className={cn(
+            'text-base font-medium tabular-nums',
+            workout === null && 'text-muted-foreground',
+          )}
+        >
           {pace}
         </span>
       </FieldRow>

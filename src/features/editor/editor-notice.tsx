@@ -1,4 +1,5 @@
 import type { Dispatch } from 'react'
+import { Button } from '~/components/ui/button'
 import { formatList } from '~/domain/format'
 import type { EditorAction, EditorNotice, FilledField } from './editor-state'
 
@@ -48,11 +49,14 @@ export function EditorNoticeBanner({
   if (!notice) return null
   const { message, actionLabel, action } = describeNotice(notice)
   return (
-    <div className="notice" role="status">
-      <p className="notice-message">{message}</p>
-      <button type="button" className="notice-action" onClick={() => dispatch(action)}>
+    <div
+      role="status"
+      className="mt-2.5 mb-1 flex items-center gap-3 rounded-2xl bg-muted py-2 pr-2 pl-3.5"
+    >
+      <p className="flex-1 text-sm">{message}</p>
+      <Button variant="ghost" size="sm" onClick={() => dispatch(action)}>
         {actionLabel}
-      </button>
+      </Button>
     </div>
   )
 }
