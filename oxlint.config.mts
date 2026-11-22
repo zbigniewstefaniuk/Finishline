@@ -98,6 +98,7 @@ export default defineConfig({
         '@typescript-eslint/array-type': 'off',
         '@typescript-eslint/no-unnecessary-condition': 'off',
         'react/no-array-index-key': 'off',
+        'no-shadow': 'off',
       },
     },
     {
