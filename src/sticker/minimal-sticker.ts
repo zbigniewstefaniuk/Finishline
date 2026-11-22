@@ -1,7 +1,7 @@
-import { FontWeight, type SkTypefaceFontProvider } from '@shopify/react-native-skia'
 import type { StickerData } from '~/domain/sticker-data'
 import { ICON_BOX } from './activity-icons'
 import {
+  FONT_WEIGHT,
   INK_COLORS,
   OPACITY,
   RULE_THICKNESS,
@@ -12,7 +12,6 @@ import {
   valueRuns,
   type Block,
   type MeasuredText,
-  type Run,
   type StickerLayout,
   type TextSpec,
 } from './sticker-drawing'
@@ -36,92 +35,86 @@ const TEXT = {
   title: {
     size: 13,
     lineHeight: 16,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.28,
     opacity: OPACITY.full,
   },
   hero: {
     size: 72,
     lineHeight: 72,
-    weight: FontWeight.ExtraBold,
+    weight: FONT_WEIGHT.extraBold,
     tracking: -0.045,
     opacity: OPACITY.full,
   },
   heroUnit: {
     size: 26,
     lineHeight: 26,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.01,
     opacity: OPACITY.full,
   },
   heroLabel: {
     size: 11,
     lineHeight: 13,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.label,
   },
   statValue: {
     size: 28,
     lineHeight: 28,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.02,
     opacity: OPACITY.full,
   },
   denseStatValue: {
     size: 24,
     lineHeight: 24,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.02,
     opacity: OPACITY.full,
   },
   statUnit: {
     size: 12,
     lineHeight: 12,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.01,
     opacity: OPACITY.full,
   },
   statLabel: {
     size: 10,
     lineHeight: 12,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.label,
   },
   date: {
     size: 12,
     lineHeight: 14,
-    weight: FontWeight.Medium,
+    weight: FONT_WEIGHT.medium,
     tracking: 0.16,
     opacity: OPACITY.date,
   },
 } as const satisfies Record<string, TextSpec>
 
-export function layoutMinimalSticker({
-  data,
-  fonts,
-}: {
-  data: StickerData
-  fonts: SkTypefaceFontProvider
-}): StickerLayout {
+export function layoutMinimalSticker(data: StickerData): StickerLayout {
   const ink = INK_COLORS[data.ink]
-  const measure = (runs: Run[]) => measureText({ runs, fonts, ink })
   const isDense = data.stats.length >= DENSE_STAT_COUNT
   const valueSpec = isDense ? TEXT.denseStatValue : TEXT.statValue
   const columnGap = isDense ? GAP.denseColumns : GAP.columns
 
-  const title = measure([{ text: data.title.toUpperCase(), spec: TEXT.title }])
-  const hero = measure(
+  const title = measureText([{ text: data.title.toUpperCase(), spec: TEXT.title }])
+  const hero = measureText(
     valueRuns({ stat: data.hero, valueSpec: TEXT.hero, unitSpec: TEXT.heroUnit }),
   )
-  const heroLabel = measure([
+  const heroLabel = measureText([
     { text: data.hero.label.toUpperCase(), spec: TEXT.heroLabel },
   ])
-  const date = data.date === null ? null : measure([{ text: data.date, spec: TEXT.date }])
+  const date =
+    data.date === null ? null : measureText([{ text: data.date, spec: TEXT.date }])
   const columns = data.stats.map((stat) => {
-    const value = measure(valueRuns({ stat, valueSpec, unitSpec: TEXT.statUnit }))
-    const label = measure([{ text: stat.label.toUpperCase(), spec: TEXT.statLabel }])
+    const value = measureText(valueRuns({ stat, valueSpec, unitSpec: TEXT.statUnit }))
+    const label = measureText([{ text: stat.label.toUpperCase(), spec: TEXT.statLabel }])
     return { value, label, width: Math.max(value.width, label.width) }
   })
 

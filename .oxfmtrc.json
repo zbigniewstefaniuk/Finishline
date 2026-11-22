@@ -2,5 +2,5 @@
   "semi": false,
   "singleQuote": true,
   "printWidth": 90,
-  "ignorePatterns": ["node_modules", ".expo", "ios", "android", "dist", "bun.lock"]
+  "ignorePatterns": ["node_modules", "native", "dist", "bun.lock"]
 }

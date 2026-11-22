@@ -1,18 +1,9 @@
-import type { Dispatch } from 'react'
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type KeyboardTypeOptions,
-} from 'react-native'
+import type { Dispatch, HTMLAttributes } from 'react'
 import { ACTIVITIES } from '~/domain/activity'
 import { formatPace, paceStyleOf } from '~/domain/pace'
 import type { Workout } from '~/domain/workout'
-import { RADIUS } from '~/theme/tokens'
-import { useTheme } from '~/theme/use-theme'
 import { DateField } from './date-field'
+import { EditorNoticeBanner } from './editor-notice'
 import type {
   EditorAction,
   EditorForm,
@@ -20,41 +11,38 @@ import type {
   FieldErrors,
   TextField,
 } from './editor-state'
-import { FieldRow } from './field-row'
-import { EditorNoticeBanner } from './editor-notice'
+import { FieldRow, blurOnEnter } from './field-row'
 
-const INPUT_WIDTH = 120
-
-const TIME_KEYBOARD: KeyboardTypeOptions =
-  Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'
+type InputMode = HTMLAttributes<HTMLInputElement>['inputMode']
 
 function NumberInput({
   field,
   label,
   value,
   placeholder,
-  keyboardType,
+  inputMode,
   dispatch,
 }: {
   field: TextField
   label: string
   value: string
-  placeholder?: string
-  keyboardType: KeyboardTypeOptions
+  placeholder: string
+  inputMode: InputMode
   dispatch: Dispatch<EditorAction>
 }) {
-  const theme = useTheme()
   return (
-    <TextInput
-      accessibilityLabel={label}
+    <input
+      aria-label={label}
+      className="field-input"
       value={value}
       placeholder={placeholder}
-      placeholderTextColor={theme.faint}
-      keyboardType={keyboardType}
-      returnKeyType="done"
-      selectionColor={theme.ink}
-      onChangeText={(text) => dispatch({ type: 'set-field', field, value: text })}
-      style={[styles.input, { color: theme.ink }]}
+      inputMode={inputMode}
+      enterKeyHint="done"
+      autoComplete="off"
+      onChange={(event) =>
+        dispatch({ type: 'set-field', field, value: event.target.value })
+      }
+      onKeyDown={blurOnEnter}
     />
   )
 }
@@ -72,7 +60,6 @@ export function WorkoutFields({
   notice: EditorNotice | null
   dispatch: Dispatch<EditorAction>
 }) {
-  const theme = useTheme()
   const distanceUnit = ACTIVITIES[form.activity].distanceUnit
   const paceStyle = paceStyleOf(form.activity)
   const pace = workout
@@ -84,8 +71,8 @@ export function WorkoutFields({
     : '–'
 
   return (
-    <View>
-      <Text style={[styles.heading, { color: theme.muted }]}>Workout</Text>
+    <div>
+      <h2 className="section-heading">Workout</h2>
       <EditorNoticeBanner notice={notice} dispatch={dispatch} />
       <FieldRow label="Distance" unit={distanceUnit} error={errors.distance} hasSeparator>
         <NumberInput
@@ -93,7 +80,7 @@ export function WorkoutFields({
           label="Distance"
           value={form.distance}
           placeholder="0"
-          keyboardType={distanceUnit === 'm' ? 'number-pad' : 'decimal-pad'}
+          inputMode={distanceUnit === 'm' ? 'numeric' : 'decimal'}
           dispatch={dispatch}
         />
       </FieldRow>
@@ -103,7 +90,7 @@ export function WorkoutFields({
           label="Time"
           value={form.time}
           placeholder="mm:ss"
-          keyboardType={TIME_KEYBOARD}
+          inputMode="text"
           dispatch={dispatch}
         />
       </FieldRow>
@@ -119,7 +106,7 @@ export function WorkoutFields({
           label="Average heart rate"
           value={form.heartRate}
           placeholder="Optional"
-          keyboardType="number-pad"
+          inputMode="numeric"
           dispatch={dispatch}
         />
       </FieldRow>
@@ -129,7 +116,7 @@ export function WorkoutFields({
           label="Calories"
           value={form.calories}
           placeholder="Optional"
-          keyboardType="number-pad"
+          inputMode="numeric"
           dispatch={dispatch}
         />
       </FieldRow>
@@ -140,58 +127,17 @@ export function WorkoutFields({
             label="Elevation gain"
             value={form.elevation}
             placeholder="Optional"
-            keyboardType="number-pad"
+            inputMode="numeric"
             dispatch={dispatch}
           />
         </FieldRow>
       ) : null}
       <FieldRow label={paceStyle.label} unit={paceStyle.unit} hasSeparator={false}>
-        <View style={styles.paceValue}>
-          <Text
-            style={[styles.badge, { backgroundColor: theme.tint, color: theme.muted }]}
-          >
-            Auto
-          </Text>
-          <Text style={[styles.computed, { color: workout ? theme.ink : theme.muted }]}>
-            {pace}
-          </Text>
-        </View>
+        <span className="badge">Auto</span>
+        <span className="computed" data-empty={workout === null || undefined}>
+          {pace}
+        </span>
       </FieldRow>
-    </View>
+    </div>
   )
 }
-
-const styles = StyleSheet.create({
-  heading: {
-    marginTop: 14,
-    marginBottom: 2,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  input: {
-    width: INPUT_WIDTH,
-    padding: 0,
-    fontSize: 17,
-    fontWeight: '500',
-    textAlign: 'right',
-    fontVariant: ['tabular-nums'],
-  },
-  paceValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  badge: {
-    overflow: 'hidden',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  computed: {
-    fontSize: 17,
-    fontWeight: '500',
-    fontVariant: ['tabular-nums'],
-  },
-})

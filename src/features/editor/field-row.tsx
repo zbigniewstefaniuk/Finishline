@@ -1,9 +1,8 @@
-import type { ReactNode } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
-import { SPACE } from '~/theme/tokens'
-import { useTheme } from '~/theme/use-theme'
+import type { KeyboardEvent, ReactNode } from 'react'
 
-const UNIT_COLUMN_WIDTH = 40
+export function blurOnEnter(event: KeyboardEvent<HTMLInputElement>) {
+  if (event.key === 'Enter') event.currentTarget.blur()
+}
 
 export function FieldRow({
   label,
@@ -18,55 +17,16 @@ export function FieldRow({
   hasSeparator: boolean
   children: ReactNode
 }) {
-  const theme = useTheme()
   return (
-    <View
-      style={[
-        styles.row,
-        hasSeparator && { borderBottomColor: theme.hairline, borderBottomWidth: 1 },
-      ]}
-    >
-      <View style={styles.rowLine}>
-        <Text style={[styles.label, { color: theme.ink }]}>{label}</Text>
-        <View style={styles.valueGroup}>
+    <div className="field-row" data-separated={hasSeparator || undefined}>
+      <div className="field-line">
+        <span className="field-label">{label}</span>
+        <div className="field-value">
           {children}
-          {unit === undefined ? null : (
-            <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
-          )}
-        </View>
-      </View>
-      {error ? (
-        <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
-      ) : null}
-    </View>
+          {unit === undefined ? null : <span className="field-unit">{unit}</span>}
+        </div>
+      </div>
+      {error ? <p className="field-error">{error}</p> : null}
+    </div>
   )
 }
-
-const styles = StyleSheet.create({
-  row: {
-    minHeight: SPACE.row,
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  rowLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  label: {
-    fontSize: 16,
-  },
-  valueGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  unit: {
-    minWidth: UNIT_COLUMN_WIDTH,
-    fontSize: 15,
-  },
-  error: {
-    marginTop: 4,
-    fontSize: 13,
-  },
-})

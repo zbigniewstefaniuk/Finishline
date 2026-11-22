@@ -1,44 +1,40 @@
-import { Linking, Platform } from 'react-native'
-import Share, { Social } from 'react-native-share'
-import { PREVIEW_BACKGROUNDS, type PreviewBackground } from '~/theme/tokens'
+import type { StickerImage } from '~/sticker/render-sticker'
 
-const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? ''
-const INSTAGRAM_ANDROID_PACKAGE = 'com.instagram.android'
-const INSTAGRAM_STORIES_URL = 'instagram-stories://share'
+const PNG_TYPE = 'image/png'
+const FILE_NAME = 'finishline-sticker.png'
 
-async function canShareToInstagramStories() {
-  if (!FACEBOOK_APP_ID) return false
-  if (Platform.OS === 'android') {
-    const { isInstalled } = await Share.isPackageInstalled(INSTAGRAM_ANDROID_PACKAGE)
-    return isInstalled
-  }
-  return Linking.canOpenURL(INSTAGRAM_STORIES_URL)
+const CAN_COPY_IMAGES = 'clipboard' in navigator && 'ClipboardItem' in window
+
+export const CAN_SHARE_FILES =
+  'canShare' in navigator &&
+  navigator.canShare({ files: [new File([], FILE_NAME, { type: PNG_TYPE })] })
+
+function pngBlob(image: StickerImage) {
+  const base64 = image.url.slice(image.url.indexOf(',') + 1)
+  const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))
+  return new Blob([bytes], { type: PNG_TYPE })
 }
 
-async function openShareSheet(fileUri: string) {
-  await Share.open({ url: fileUri, type: 'image/png', failOnCancel: false })
+export async function copySticker(image: StickerImage) {
+  if (!CAN_COPY_IMAGES) {
+    throw new Error('This browser cannot copy images. Long-press the sticker instead.')
+  }
+  await navigator.clipboard.write([new ClipboardItem({ [PNG_TYPE]: pngBlob(image) })])
 }
 
-export async function shareSticker({
-  fileUri,
-  background,
-}: {
-  fileUri: string
-  background: PreviewBackground
-}) {
-  if (!(await canShareToInstagramStories())) {
-    await openShareSheet(fileUri)
-    return
-  }
+export async function shareSticker(image: StickerImage) {
+  const file = new File([pngBlob(image)], FILE_NAME, { type: PNG_TYPE })
   try {
-    await Share.shareSingle({
-      social: Social.InstagramStories,
-      appId: FACEBOOK_APP_ID,
-      stickerImage: fileUri,
-      backgroundTopColor: PREVIEW_BACKGROUNDS[background].storyTop,
-      backgroundBottomColor: PREVIEW_BACKGROUNDS[background].storyBottom,
-    })
-  } catch {
-    await openShareSheet(fileUri)
+    await navigator.share({ files: [file] })
+  } catch (error) {
+    const isCancelled = error instanceof DOMException && error.name === 'AbortError'
+    if (!isCancelled) throw error
   }
+}
+
+export function downloadSticker(image: StickerImage) {
+  const link = document.createElement('a')
+  link.href = image.url
+  link.download = FILE_NAME
+  link.click()
 }

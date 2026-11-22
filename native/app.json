@@ -26,12 +26,27 @@
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+      ],
+      "permissions": [
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_TOTAL_CALORIES_BURNED",
+        "android.permission.health.READ_ELEVATION_GAINED"
       ]
     },
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker",
-      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
       [
         "expo-media-library",
         {
@@ -55,7 +70,8 @@
           "microphonePermission": false
         }
       ],
-      "expo-mlkit-ocr"
+      "expo-mlkit-ocr",
+      "react-native-health-connect"
     ],
     "experiments": {
       "typedRoutes": true,

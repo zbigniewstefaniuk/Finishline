@@ -1,7 +1,7 @@
-import { FontWeight, type SkTypefaceFontProvider } from '@shopify/react-native-skia'
 import type { StickerData } from '~/domain/sticker-data'
 import { ICON_BOX } from './activity-icons'
 import {
+  FONT_WEIGHT,
   INK_COLORS,
   OPACITY,
   RULE_THICKNESS,
@@ -12,7 +12,6 @@ import {
   valueRuns,
   type Block,
   type MeasuredText,
-  type Run,
   type StickerLayout,
   type TextSpec,
 } from './sticker-drawing'
@@ -28,49 +27,49 @@ const TEXT = {
   title: {
     size: 11,
     lineHeight: 13,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.full,
   },
   date: {
     size: 10,
     lineHeight: 12,
-    weight: FontWeight.Medium,
+    weight: FONT_WEIGHT.medium,
     tracking: 0.16,
     opacity: OPACITY.date,
   },
   hero: {
     size: 36,
     lineHeight: 36,
-    weight: FontWeight.ExtraBold,
+    weight: FONT_WEIGHT.extraBold,
     tracking: -0.04,
     opacity: OPACITY.full,
   },
   heroUnit: {
     size: 15,
     lineHeight: 15,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: 0,
     opacity: OPACITY.full,
   },
   statValue: {
     size: 22,
     lineHeight: 22,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.02,
     opacity: OPACITY.full,
   },
   statUnit: {
     size: 11,
     lineHeight: 11,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.01,
     opacity: OPACITY.full,
   },
   label: {
     size: 10,
     lineHeight: 12,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.label,
   },
@@ -128,27 +127,21 @@ function identityColumn({
   }
 }
 
-export function layoutStripSticker({
-  data,
-  fonts,
-}: {
-  data: StickerData
-  fonts: SkTypefaceFontProvider
-}): StickerLayout {
+export function layoutStripSticker(data: StickerData): StickerLayout {
   const ink = INK_COLORS[data.ink]
-  const measure = (runs: Run[]) => measureText({ runs, fonts, ink })
   const label = (text: string) =>
-    measure([{ text: text.toUpperCase(), spec: TEXT.label }])
+    measureText([{ text: text.toUpperCase(), spec: TEXT.label }])
 
   const columns = [
     identityColumn({
       data,
-      title: measure([{ text: data.title.toUpperCase(), spec: TEXT.title }]),
-      date: data.date === null ? null : measure([{ text: data.date, spec: TEXT.date }]),
+      title: measureText([{ text: data.title.toUpperCase(), spec: TEXT.title }]),
+      date:
+        data.date === null ? null : measureText([{ text: data.date, spec: TEXT.date }]),
     }),
     valueColumn({
       id: 'hero',
-      value: measure(
+      value: measureText(
         valueRuns({ stat: data.hero, valueSpec: TEXT.hero, unitSpec: TEXT.heroUnit }),
       ),
       label: label(data.hero.label),
@@ -156,7 +149,7 @@ export function layoutStripSticker({
     ...data.stats.map((stat, index) =>
       valueColumn({
         id: `stat-${index}`,
-        value: measure(
+        value: measureText(
           valueRuns({ stat, valueSpec: TEXT.statValue, unitSpec: TEXT.statUnit }),
         ),
         label: label(stat.label),
