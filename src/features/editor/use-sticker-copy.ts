@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { copySticker } from '~/share/share-sticker'
 import type { StickerImage } from '~/sticker/render-sticker'
+import { copyStateOf } from './copy-state'
 
-export type CopyStatus = 'idle' | 'copying' | 'copied'
-
-const DONE_FLASH_MS = 1600
+const COPIED_TOAST_ID = 'sticker-copied'
 
 export function showFailure({ title, error }: { title: string; error: unknown }) {
   toast.error(title, {
@@ -13,25 +12,25 @@ export function showFailure({ title, error }: { title: string; error: unknown })
   })
 }
 
-export function useStickerCopy() {
-  const [status, setStatus] = useState<CopyStatus>('idle')
+export function useStickerCopy(image: StickerImage | null) {
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+  const [isCopying, setIsCopying] = useState(false)
 
-  useEffect(() => {
-    if (status !== 'copied') return
-    const timer = setTimeout(() => setStatus('idle'), DONE_FLASH_MS)
-    return () => clearTimeout(timer)
-  }, [status])
-
-  async function copy(image: StickerImage) {
-    setStatus('copying')
+  async function copy(sticker: StickerImage) {
+    setIsCopying(true)
     try {
-      await copySticker(image)
-      setStatus('copied')
+      await copySticker(sticker)
+      setCopiedUrl(sticker.url)
+      toast.success('Copied', {
+        id: COPIED_TOAST_ID,
+        description: 'Paste it into your Story.',
+      })
     } catch (error) {
-      setStatus('idle')
       showFailure({ title: "Couldn't copy the sticker", error })
     }
+    setIsCopying(false)
   }
 
-  return { status, copy }
+  const state = copyStateOf({ isCopying, copiedUrl, currentUrl: image?.url ?? null })
+  return { state, copy }
 }

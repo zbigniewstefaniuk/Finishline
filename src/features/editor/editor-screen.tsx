@@ -49,7 +49,7 @@ function StickerOutput({
   use(STICKER_FONTS_READY)
   const image = data ? renderSticker(data) : null
   const exportable = canExport ? image : null
-  const stickerCopy = useStickerCopy()
+  const stickerCopy = useStickerCopy(exportable)
   return (
     <>
       <PreviewStage
@@ -65,7 +65,7 @@ function StickerOutput({
       />
       <ExportBar
         image={exportable}
-        copyStatus={stickerCopy.status}
+        copyState={stickerCopy.state}
         onCopy={(sticker) => void stickerCopy.copy(sticker)}
       >
         {optionsDrawer}
@@ -108,7 +108,7 @@ export function EditorScreen() {
               dispatch={dispatch}
               onLongPress={() => undefined}
             />
-            <ExportBar image={null} copyStatus="idle" onCopy={() => undefined}>
+            <ExportBar image={null} copyState="copy" onCopy={() => undefined}>
               {optionsDrawer}
             </ExportBar>
           </>
