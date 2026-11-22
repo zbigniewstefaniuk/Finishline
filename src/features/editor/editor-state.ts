@@ -9,7 +9,10 @@ import {
   type Workout,
 } from '~/domain/workout'
 import type { WorkoutScan } from '~/domain/workout-scan'
-import type { PreviewBackground } from '~/theme/tokens'
+
+export const PREVIEW_BACKGROUNDS = ['dark', 'light'] as const
+
+export type PreviewBackground = (typeof PREVIEW_BACKGROUNDS)[number]
 
 export type TextField = 'distance' | 'time' | 'heartRate' | 'calories' | 'elevation'
 

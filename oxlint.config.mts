@@ -1,13 +1,6 @@
 import { defineConfig } from 'oxlint'
 
-const FRAMEWORK_IMPORTS = [
-  'react',
-  'react-native',
-  'react-native-*',
-  'expo',
-  'expo-*',
-  '@shopify/*',
-]
+const FRAMEWORK_IMPORTS = ['react', 'react-dom', 'react-dom/*']
 
 export default defineConfig({
   plugins: ['unicorn', 'oxc', 'react', 'typescript', 'import', 'promise'],
@@ -17,15 +10,13 @@ export default defineConfig({
   },
   env: {
     builtin: true,
+    browser: true,
     es2026: true,
-  },
-  globals: {
-    __DEV__: 'readonly',
   },
   options: {
     typeAware: true,
   },
-  ignorePatterns: ['node_modules', '.expo', 'ios', 'android', 'dist'],
+  ignorePatterns: ['node_modules', 'native', 'dist'],
   rules: {
     'no-unused-vars': [
       'error',

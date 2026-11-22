@@ -1,7 +1,7 @@
-import { FontWeight, type SkTypefaceFontProvider } from '@shopify/react-native-skia'
 import type { StickerData } from '~/domain/sticker-data'
 import { ICON_BOX } from './activity-icons'
 import {
+  FONT_WEIGHT,
   INK_COLORS,
   OPACITY,
   RULE_THICKNESS,
@@ -12,7 +12,6 @@ import {
   valueRuns,
   type Block,
   type MeasuredText,
-  type Run,
   type StickerLayout,
   type TextSpec,
 } from './sticker-drawing'
@@ -33,56 +32,56 @@ const TEXT = {
   title: {
     size: 13,
     lineHeight: 16,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.28,
     opacity: OPACITY.full,
   },
   hero: {
     size: 96,
     lineHeight: 86,
-    weight: FontWeight.ExtraBold,
+    weight: FONT_WEIGHT.extraBold,
     tracking: -0.05,
     opacity: OPACITY.full,
   },
   heroUnit: {
     size: 28,
     lineHeight: 28,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.01,
     opacity: OPACITY.full,
   },
   heroLabel: {
     size: 11,
     lineHeight: 13,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.label,
   },
   statLabel: {
     size: 10,
     lineHeight: 12,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.24,
     opacity: OPACITY.label,
   },
   statValue: {
     size: 22,
     lineHeight: 22,
-    weight: FontWeight.Bold,
+    weight: FONT_WEIGHT.bold,
     tracking: -0.02,
     opacity: OPACITY.full,
   },
   statUnit: {
     size: 11,
     lineHeight: 11,
-    weight: FontWeight.SemiBold,
+    weight: FONT_WEIGHT.semiBold,
     tracking: 0.01,
     opacity: OPACITY.full,
   },
   date: {
     size: 12,
     lineHeight: 14,
-    weight: FontWeight.Medium,
+    weight: FONT_WEIGHT.medium,
     tracking: 0.16,
     opacity: OPACITY.date,
   },
@@ -131,27 +130,21 @@ function layoutRow({
   return { blocks, bottom: contentBottom + GAP.rowPadding }
 }
 
-export function layoutEditorialSticker({
-  data,
-  fonts,
-}: {
-  data: StickerData
-  fonts: SkTypefaceFontProvider
-}): StickerLayout {
+export function layoutEditorialSticker(data: StickerData): StickerLayout {
   const ink = INK_COLORS[data.ink]
-  const measure = (runs: Run[]) => measureText({ runs, fonts, ink })
 
-  const title = measure([{ text: data.title.toUpperCase(), spec: TEXT.title }])
-  const hero = measure(
+  const title = measureText([{ text: data.title.toUpperCase(), spec: TEXT.title }])
+  const hero = measureText(
     valueRuns({ stat: data.hero, valueSpec: TEXT.hero, unitSpec: TEXT.heroUnit }),
   )
-  const heroLabel = measure([
+  const heroLabel = measureText([
     { text: data.hero.label.toUpperCase(), spec: TEXT.heroLabel },
   ])
-  const date = data.date === null ? null : measure([{ text: data.date, spec: TEXT.date }])
+  const date =
+    data.date === null ? null : measureText([{ text: data.date, spec: TEXT.date }])
   const rows: StatRow[] = data.stats.map((stat) => ({
-    label: measure([{ text: stat.label.toUpperCase(), spec: TEXT.statLabel }]),
-    value: measure(
+    label: measureText([{ text: stat.label.toUpperCase(), spec: TEXT.statLabel }]),
+    value: measureText(
       valueRuns({ stat, valueSpec: TEXT.statValue, unitSpec: TEXT.statUnit }),
     ),
   }))

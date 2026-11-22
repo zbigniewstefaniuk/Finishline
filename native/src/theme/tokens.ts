@@ -11,6 +11,7 @@ type ThemeTokens = {
   onPrimary: string
   success: string
   danger: string
+  scrim: string
 }
 
 export const THEMES = {
@@ -27,6 +28,7 @@ export const THEMES = {
     onPrimary: '#121212',
     success: '#7FC493',
     danger: '#F28B82',
+    scrim: 'rgba(0, 0, 0, 0.6)',
   },
   light: {
     ground: '#F3F1EC',
@@ -41,6 +43,7 @@ export const THEMES = {
     onPrimary: '#F2EEE5',
     success: '#276B3F',
     danger: '#B3261E',
+    scrim: 'rgba(21, 21, 20, 0.4)',
   },
 } as const satisfies Record<'dark' | 'light', ThemeTokens>
 

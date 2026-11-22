@@ -1,58 +1,59 @@
-@AGENTS.md
-
 # Finishline
 
-Expo app that turns workout stats into a transparent PNG sticker for Instagram Stories.
-Expo SDK 58 · React Native 0.88 · React 19 (React Compiler on) · TypeScript 7 strict ·
-expo-router · Skia · bun · oxlint + oxfmt · Vitest.
+Web app that turns workout stats into a transparent PNG sticker: copy it, paste it into an
+Instagram Story. Vite 8 · React 19 (React Compiler via Babel) · TypeScript 7 strict · Canvas 2D ·
+bun · oxlint + oxfmt · Vitest.
+
+The shelved Expo app lives in `native/` with its own package, lockfile and CLAUDE.md. It is not
+part of the web build, lint or tests; run its commands from inside `native/`.
 
 ## Commands
 
 ```bash
 bun run check        # oxlint, tsc, vitest, oxfmt --check
 bun run format       # oxfmt write
+bun run dev          # Vite dev server
+bun run build        # production build to dist/
 bun run test:watch
-bun run start        # Metro for the dev client
-bun run android      # local build + run on the Android emulator (needs Android Studio)
-bunx eas-cli build --profile development --platform ios
 ```
 
 ## Layout
 
 ```
-src/app/              expo-router routes only; screens live in features/
 src/domain/           plain TypeScript: activities, parsing, formatting, pace, StickerData,
                       screenshot text parser (workout-scan.ts, scan-date.ts)
 src/features/editor/  the editor screen, its reducer (editor-state.ts) and parts
-src/sticker/          Skia sticker layouts (minimal, strip, editorial), icons, fonts, 3x PNG export
-src/share/            save to photos, Instagram Stories share with share-sheet fallback
-src/scan/             pick a screenshot (expo-image-picker), on-device ML Kit OCR (expo-mlkit-ocr)
-src/theme/            colour tokens for dark/light and the preview backgrounds
+src/sticker/          canvas sticker layouts (minimal, strip, editorial), icons, fonts, 3x PNG render
+src/share/            copy to clipboard, Web Share, download
+src/scan/             screenshot OCR with Tesseract.js (lazy-loaded; worker, core and English data
+                      come from the jsDelivr CDN on first use)
+src/assets/fonts/     Inter Display subset to Latin as WOFF2 (OFL licence alongside)
+src/styles.css        colour tokens for dark/light and all component styles
 ```
 
 ## Rules
 
-- Continuous Native Generation: never create or edit `ios/` or `android/`. Native config goes
-  through `app.json` and config plugins.
-- `src/domain` imports no React, React Native, Expo or Skia (oxlint enforces it). Unit tests
-  sit next to the file (`parse.ts` → `parse.test.ts`) and cover domain and reducer logic.
-- The sticker is drawn by Skia from `StickerData`. Preview and export share `layoutSticker`
-  (picks the layout by `StickerData.style`) + `StickerDrawing` (`sticker-drawing.tsx`); export
-  renders offscreen at 3x, so it never depends on the device pixel ratio.
+- `src/domain` imports no React (oxlint enforces it). Unit tests sit next to the file
+  (`parse.ts` → `parse.test.ts`) and cover domain and reducer logic.
+- The sticker is drawn on a canvas from `StickerData`. `renderSticker`
+  (`src/sticker/render-sticker.ts`) picks the layout by `StickerData.style`, draws at 3x and
+  returns a PNG data URL; the preview shows that same image, so preview and export never drift.
+  Long-pressing the preview image is the browser's own copy/save fallback.
+- Text is measured and drawn character by character (`sticker-drawing.ts`) so tracking works in
+  browsers without `CanvasRenderingContext2D.letterSpacing`. Layout waits for
+  `STICKER_FONTS_READY` via `use()` under a Suspense boundary.
+- Copy and Share must call `navigator.clipboard.write` / `navigator.share` synchronously inside
+  the click handler (iOS Safari drops the user gesture after an `await`). Both need a secure
+  context: test on a phone over HTTPS, not a LAN `http://` address.
 - New sport: add it to `ACTIVITIES` (`src/domain/activity.ts`), `ACTIVITY_ICONS` and, for a
   new pace style, `PACE_STYLES` (`src/domain/pace.ts`). Optionally add its keywords to
-  `ACTIVITY_KEYWORDS` (`src/domain/workout-scan.ts`) so screenshots detect it. New layout
-  style: a sibling of `minimal-sticker.ts` that takes `StickerData`, added to `STICKER_STYLES`
-  (`src/domain/sticker-data.ts`) and `STICKER_LAYOUTS` (`src/sticker/layout-sticker.ts`).
-- Screenshot import: `src/scan` returns positioned `OcrLine`s; `parseWorkoutScan` turns them
-  into a `WorkoutScan`. Test parser changes with a text layout sample in `workout-scan.test.ts`.
-- Phase 2 imports (HealthKit, Health Connect, Garmin) map into `Workout`
-  (`src/domain/workout.ts`).
-- Hermes in RN 0.88 has no `Array.prototype.toSorted` (Node and Vitest do, so tests pass and
-  the device throws "undefined is not a function"). Copy and `sort` instead.
+  `ACTIVITY_KEYWORDS` (`src/domain/workout-scan.ts`) so screenshots detect it. New layout style: a sibling of
+  `minimal-sticker.ts` that takes `StickerData`, added to `STICKER_STYLES`
+  (`src/domain/sticker-data.ts`) and `STICKER_LAYOUTS` (`src/sticker/render-sticker.ts`).
+- Screenshot import: `readScreenshotLines` runs Tesseract in sparse-text mode, then
+  `splitOcrColumns` (`src/domain/ocr-columns.ts`) splits lines that merged neighbouring grid
+  columns; `parseWorkoutScan` turns the phrases into a `WorkoutScan` for the reducer's
+  `apply-scan`. Test parser changes with a text layout sample in `workout-scan.test.ts`.
 - No `useMemo` / `useCallback` / `React.memo`. React Compiler bails on `try/finally` in
   components; keep handlers to `try/catch`.
-- `expo-media-library` 58 uses the new API: `Asset.create(uri)` after a write-only permission
-  request. `saveToLibraryAsync` throws at runtime.
-- `EXPO_PUBLIC_FACEBOOK_APP_ID` (`.env`, EAS env var) enables the Instagram Stories share;
-  without it the share sheet opens instead.
+- oxlint runs with `--disable-nested-config` so it never loads `native/oxlint.config.mts`.
