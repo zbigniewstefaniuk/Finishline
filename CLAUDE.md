@@ -17,7 +17,8 @@ bun run build        # production build to dist/
 bun run test:watch
 ```
 
-Every push to `main` runs `bun run check`, builds and deploys to GitHub Pages
+Pull requests run `bun run check` and the build (`.github/workflows/check.yml`). Every push to
+`main` runs the same, then deploys to GitHub Pages
 (`.github/workflows/deploy-pages.yml`): https://zbigniewstefaniuk.github.io/Finishline/. Vite uses
 `base: './'` and the HTML and manifest use relative URLs, so the same build works at `/` locally
 and under `/Finishline/` on Pages.
