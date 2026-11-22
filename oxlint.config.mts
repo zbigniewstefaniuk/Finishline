@@ -90,6 +90,14 @@ export default defineConfig({
       },
     },
     {
+      files: ['src/components/ui/**'],
+      rules: {
+        'react/jsx-no-constructed-context-values': 'off',
+        '@typescript-eslint/no-unsafe-type-assertion': 'off',
+        '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      },
+    },
+    {
       files: ['**/*.test.ts'],
       rules: {
         '@typescript-eslint/no-unsafe-type-assertion': 'off',

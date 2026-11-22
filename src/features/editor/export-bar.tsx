@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '~/components/ui/button'
 import {
   CAN_SHARE_FILES,
   copySticker,
@@ -18,9 +20,9 @@ const COPY_LABELS = {
 } as const satisfies Record<CopyStatus, string>
 
 function showFailure({ title, error }: { title: string; error: unknown }) {
-  window.alert(
-    `${title}. ${error instanceof Error ? error.message : 'Please try again.'}`,
-  )
+  toast.error(title, {
+    description: error instanceof Error ? error.message : 'Try again.',
+  })
 }
 
 export function ExportBar({ image }: { image: StickerImage | null }) {
@@ -41,7 +43,7 @@ export function ExportBar({ image }: { image: StickerImage | null }) {
       setCopyStatus('copied')
     } catch (error) {
       setCopyStatus('idle')
-      showFailure({ title: 'Could not copy the sticker', error })
+      showFailure({ title: "Couldn't copy the sticker", error })
     }
   }
 
@@ -49,15 +51,15 @@ export function ExportBar({ image }: { image: StickerImage | null }) {
     try {
       await shareSticker(sticker)
     } catch (error) {
-      showFailure({ title: 'Could not share the sticker', error })
+      showFailure({ title: "Couldn't share the sticker", error })
     }
   }
 
   return (
-    <div className="export-bar">
-      <button
-        type="button"
-        className="action action-secondary"
+    <div className="fixed inset-x-0 bottom-0 mx-auto flex max-w-130 gap-3 bg-background px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <Button
+        variant="secondary"
+        className="h-13 flex-1 text-base"
         disabled={isDisabled}
         onClick={() => {
           if (!image) return
@@ -66,17 +68,16 @@ export function ExportBar({ image }: { image: StickerImage | null }) {
         }}
       >
         {CAN_SHARE_FILES ? 'Share' : 'Download'}
-      </button>
-      <button
-        type="button"
-        className="action action-primary"
+      </Button>
+      <Button
+        className="h-13 flex-[1.5] text-base"
         disabled={isDisabled}
         onClick={() => {
           if (image) void copy(image)
         }}
       >
         {COPY_LABELS[copyStatus]}
-      </button>
+      </Button>
     </div>
   )
 }

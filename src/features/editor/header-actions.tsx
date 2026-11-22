@@ -1,4 +1,6 @@
 import { useRef, useState, type Dispatch } from 'react'
+import { toast } from 'sonner'
+import { Button } from '~/components/ui/button'
 import { parseWorkoutScan } from '~/domain/workout-scan'
 import { readScreenshotLines } from '~/scan/read-screenshot'
 import type { EditorAction } from './editor-state'
@@ -19,33 +21,33 @@ export function HeaderActions({ dispatch }: { dispatch: Dispatch<EditorAction> }
         scan: parseWorkoutScan({ lines, today: new Date() }),
       })
     } catch (error) {
-      window.alert(
-        `Could not read the screenshot. ${error instanceof Error ? error.message : 'Please try again.'}`,
-      )
+      toast.error("Couldn't read the screenshot", {
+        description: error instanceof Error ? error.message : 'Try again.',
+      })
     }
     setUploadStatus('idle')
   }
 
   return (
-    <div className="header-actions">
-      <button
-        type="button"
-        className="header-pill"
+    <div className="flex gap-2">
+      <Button
+        variant="secondary"
+        size="lg"
         aria-label="Start a new sticker"
         onClick={() => dispatch({ type: 'start-new', today: new Date() })}
       >
         New
-      </button>
-      <button
-        type="button"
-        className="header-pill"
+      </Button>
+      <Button
+        variant="secondary"
+        size="lg"
         aria-label="Upload a workout screenshot to fill in the stats"
         aria-busy={isReading}
         disabled={isReading}
         onClick={() => fileInputRef.current?.click()}
       >
         {isReading ? 'Reading…' : 'Upload'}
-      </button>
+      </Button>
       <input
         ref={fileInputRef}
         type="file"
