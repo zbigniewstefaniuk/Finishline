@@ -30,11 +30,11 @@ describe('splitOcrColumns', () => {
   it('boxes each phrase around its own words', () => {
     const lines = [
       [word({ text: 'Time', x: 767, y: 422 })],
-      [word({ text: '138', x: 409, y: 659 }), word({ text: '52:30', x: 768, y: 659 })],
+      [word({ text: '138', x: 409, y: 475 }), word({ text: '52:30', x: 768, y: 475 })],
     ]
     expect(splitOcrColumns(lines).at(-1)).toEqual({
       text: '52:30',
-      box: { x: 768, y: 659, width: 100, height: WORD_HEIGHT },
+      box: { x: 768, y: 475, width: 100, height: WORD_HEIGHT },
     })
   })
 
@@ -50,5 +50,13 @@ describe('splitOcrColumns', () => {
     expect(splitOcrColumns(lines).map((line) => line.text)).toContain(
       'Zurich, Switzerland',
     )
+  })
+
+  it('ignores a column start far above or below the word', () => {
+    const lines = [
+      [word({ text: '12:12', x: 169, y: 495 }), word({ text: 'mi', x: 214, y: 495 })],
+      [word({ text: 'Share', x: 214, y: 1200 })],
+    ]
+    expect(splitOcrColumns(lines).map((line) => line.text)).toEqual(['12:12 mi', 'Share'])
   })
 })

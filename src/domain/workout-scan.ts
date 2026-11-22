@@ -47,6 +47,7 @@ const NUMBER = String.raw`\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?`
 const CLOCK = String.raw`\d{1,2}:\d{2}(?:[.,]\d+)?`
 const NOT_INSIDE_NUMBER = String.raw`(?<![\d.,:'])`
 const PACE_UNIT = String.raw`(?:km|mi|mile|100\s?m|500\s?m|100\s?yds?)\b`
+const MILES = /\d\s*\/?\s*mi(?:les?)?\b/
 
 const RANGES = {
   heartRate: { min: 30, max: 250 },
@@ -68,6 +69,13 @@ const ACTIVITY_KEYWORDS: [RegExp, ActivityType][] = [
   [/\b(?:ride|rides|riding|cycling|bike|biking)\b/, 'ride'],
   [/\b(?:run|runs|running|jog|jogging)\b/, 'run'],
   [/\bswim(?:s|ming)?\b/, 'pool-swim'],
+]
+
+const PACE_ACTIVITIES: [RegExp, ActivityType][] = [
+  [/\b(?:km\/h|kmh|kph|mph)\b/, 'ride'],
+  [/\d\s*\/\s*100\s?(?:m|yds?)\b/, 'pool-swim'],
+  [/\d\s*\/\s*500\s?m\b/, 'row'],
+  [/\d\s*\/\s*(?:km|mi)\b/, 'run'],
 ]
 
 const LABELS: [RegExp, Label][] = [
@@ -204,7 +212,7 @@ const MATCHERS: Matcher[] = [
     },
   },
   {
-    pattern: new RegExp(String.raw`${NOT_INSIDE_NUMBER}(${NUMBER})(?![\d.,:'])`, 'g'),
+    pattern: new RegExp(String.raw`${NOT_INSIDE_NUMBER}(${NUMBER})(?![\d,:']|\.\d)`, 'g'),
     read: ([, value = '']) => ({
       kind: 'number',
       value: readNumber({ text: value, style: 'whole' }),
@@ -252,7 +260,7 @@ function fits({ field, token }: { field: Field | 'other'; token: Token }) {
       return true
     }
     case 'distance': {
-      return token.kind === 'length' && token.unit !== 'ft'
+      return (token.kind === 'length' && token.unit !== 'ft') || token.kind === 'number'
     }
     case 'time': {
       return token.kind === 'clock'
@@ -332,9 +340,32 @@ function pairLabels(lines: ReadLine[]) {
   return { labelled, claimed }
 }
 
-function detectActivity(texts: string[]) {
-  const text = normalize(texts.join(' '))
-  return ACTIVITY_KEYWORDS.find(([pattern]) => pattern.test(text))?.[1]
+function withoutStatusBar(lines: ReadLine[]) {
+  const [first, ...rest] = lines
+  const isStatusBarClock =
+    first?.label === null &&
+    first.tokens.length === 1 &&
+    first.tokens[0]?.kind === 'clock'
+  return isStatusBarClock ? rest : lines
+}
+
+function bareDistanceMeters({
+  value,
+  pageText,
+  activity,
+}: {
+  value: number
+  pageText: string
+  activity: ActivityType | undefined
+}) {
+  if (activity === undefined) return undefined
+  const unit = MILES.test(pageText) ? 'mi' : ACTIVITIES[activity].distanceUnit
+  return value * METERS_PER_UNIT[unit]
+}
+
+function detectActivity(pageText: string) {
+  const matches = ([pattern]: [RegExp, ActivityType]) => pattern.test(pageText)
+  return (ACTIVITY_KEYWORDS.find(matches) ?? PACE_ACTIVITIES.find(matches))?.[1]
 }
 
 function withinRange({ value, range }: { value: number | undefined; range: Range }) {
@@ -370,10 +401,11 @@ export function parseWorkoutScan({
   today: Date
 }): WorkoutScan {
   const ordered = [...lines].sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x)
-  const read = ordered.map((line) => readLine({ line, today }))
+  const read = withoutStatusBar(ordered.map((line) => readLine({ line, today })))
   const { labelled, claimed } = pairLabels(read)
   const free = read.flatMap((line, index) => (claimed.has(index) ? [] : line.tokens))
-  const activity = detectActivity(ordered.map((line) => line.text))
+  const pageText = normalize(ordered.map((line) => line.text).join(' '))
+  const activity = detectActivity(pageText)
   const usesMeters = activity === undefined || ACTIVITIES[activity].distanceUnit === 'm'
 
   const byLabel = (field: Field) =>
@@ -391,9 +423,14 @@ export function parseWorkoutScan({
         )
       : undefined)
 
+  const distance = byLabel('distance') ?? fallbackDistance
+
   return {
     activity,
-    distanceMeters: numericValue(byLabel('distance') ?? fallbackDistance),
+    distanceMeters:
+      distance?.kind === 'number'
+        ? bareDistanceMeters({ value: distance.value, pageText, activity })
+        : numericValue(distance),
     durationSeconds: numericValue(
       byLabel('time') ?? free.find((token) => token.kind === 'clock'),
     ),

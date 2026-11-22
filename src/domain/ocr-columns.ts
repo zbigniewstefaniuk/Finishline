@@ -1,10 +1,15 @@
-import type { OcrLine } from './workout-scan'
+import type { OcrBox, OcrLine } from './workout-scan'
 
-const COLUMN_ALIGN_TOLERANCE_IN_HEIGHTS = 0.25
+const COLUMN = { alignInHeights: 0.25, reachInHeights: 4 } as const
 
-function startsColumn({ word, columnStarts }: { word: OcrLine; columnStarts: number[] }) {
-  const tolerance = word.box.height * COLUMN_ALIGN_TOLERANCE_IN_HEIGHTS
-  return columnStarts.some((start) => Math.abs(word.box.x - start) <= tolerance)
+function startsColumn({ word, columnStarts }: { word: OcrLine; columnStarts: OcrBox[] }) {
+  return columnStarts.some((start) => {
+    const isAligned =
+      Math.abs(word.box.x - start.x) <= word.box.height * COLUMN.alignInHeights
+    const isNearby =
+      Math.abs(word.box.y - start.y) <= word.box.height * COLUMN.reachInHeights
+    return isAligned && isNearby
+  })
 }
 
 function joinWords(words: OcrLine[]): OcrLine {
@@ -23,7 +28,7 @@ function splitAtColumns({
   columnStarts,
 }: {
   words: OcrLine[]
-  columnStarts: number[]
+  columnStarts: OcrBox[]
 }) {
   const phrases: OcrLine[][] = []
   for (const [index, word] of words.entries()) {
@@ -36,6 +41,6 @@ function splitAtColumns({
 }
 
 export function splitOcrColumns(lines: OcrLine[][]): OcrLine[] {
-  const columnStarts = lines.flatMap((words) => (words[0] ? [words[0].box.x] : []))
+  const columnStarts = lines.flatMap((words) => (words[0] ? [words[0].box] : []))
   return lines.flatMap((words) => splitAtColumns({ words, columnStarts }))
 }
