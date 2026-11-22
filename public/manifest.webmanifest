@@ -2,9 +2,9 @@
   "name": "Finishline",
   "short_name": "Finishline",
   "description": "Turn workout stats into a transparent sticker for Instagram Stories.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0C0C0D",
   "theme_color": "#0C0C0D",
-  "icons": [{ "src": "/icon.png", "sizes": "1024x1024", "type": "image/png" }]
+  "icons": [{ "src": "icon.png", "sizes": "1024x1024", "type": "image/png" }]
 }
