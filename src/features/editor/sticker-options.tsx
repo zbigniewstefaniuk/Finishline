@@ -1,5 +1,12 @@
 import { RiCheckLine } from '@remixicon/react'
 import type { Dispatch } from 'react'
+import {
+  Field,
+  FieldDescription,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { Toggle } from '~/components/ui/toggle'
 import { ACTIVITIES, type ActivityType } from '~/domain/activity'
@@ -18,6 +25,8 @@ import { MAX_SECONDARY_STATS, statsFor, type Workout } from '~/domain/workout'
 import { ChoiceChips } from './choice-chips'
 import type { EditorAction } from './editor-state'
 import { FieldRow, blurOnEnter } from './field-row'
+
+const STICKER_TITLE_INPUT_ID = 'sticker-title'
 
 const INK_LABELS = {
   light: 'Light',
@@ -90,13 +99,16 @@ export function StickerOptionsSection({
     .map((chip) => chip.label)
 
   return (
-    <div>
-      <div className="mt-5 mb-2.5 flex items-baseline justify-between">
-        <h2 className="text-sm font-medium text-muted-foreground">On the sticker</h2>
-        <span className="text-sm text-muted-foreground tabular-nums">
+    <FieldSet className="mt-5 gap-0">
+      <FieldLegend
+        variant="label"
+        className="mb-2.5 flex w-full items-baseline justify-between text-muted-foreground"
+      >
+        On the sticker
+        <span className="font-normal tabular-nums">
           {`${options.stats.length} of ${MAX_SECONDARY_STATS}`}
         </span>
-      </div>
+      </FieldLegend>
       <div className="flex flex-wrap gap-2">
         {chips.map((chip) => (
           <Chip
@@ -114,11 +126,11 @@ export function StickerOptionsSection({
           onPress={() => dispatch({ type: 'toggle-date' })}
         />
       </div>
-      <p className="mt-3 min-h-5 text-sm text-muted-foreground">
+      <FieldDescription className="mt-3 min-h-5">
         {chipHint({ isFull, missing })}
-      </p>
-      <div className="flex flex-col gap-2.5 border-b border-border py-3.5">
-        <span className="text-base">Style</span>
+      </FieldDescription>
+      <Field className="gap-2.5 border-b border-border py-3.5">
+        <FieldTitle className="text-base font-normal">Style</FieldTitle>
         <ChoiceChips
           values={STICKER_STYLES}
           labels={STYLE_LABELS}
@@ -126,10 +138,10 @@ export function StickerOptionsSection({
           label="Sticker style"
           onChange={(style) => dispatch({ type: 'set-style', style })}
         />
-      </div>
-      <FieldRow label="Title" hasSeparator>
+      </Field>
+      <FieldRow label="Title" htmlFor={STICKER_TITLE_INPUT_ID} hasSeparator>
         <Input
-          aria-label="Sticker title"
+          id={STICKER_TITLE_INPUT_ID}
           className="h-9 w-48 text-right text-base font-medium"
           value={options.title}
           placeholder={ACTIVITIES[activity].label}
@@ -151,6 +163,6 @@ export function StickerOptionsSection({
           onChange={(ink) => dispatch({ type: 'set-ink', ink })}
         />
       </FieldRow>
-    </div>
+    </FieldSet>
   )
 }

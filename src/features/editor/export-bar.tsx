@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
+import { Spinner } from '~/components/ui/spinner'
 import {
   CAN_SHARE_FILES,
   copySticker,
@@ -76,6 +77,7 @@ export function ExportBar({ image }: { image: StickerImage | null }) {
           if (image) void copy(image)
         }}
       >
+        {copyStatus === 'copying' ? <Spinner data-icon="inline-start" /> : null}
         {COPY_LABELS[copyStatus]}
       </Button>
     </div>
