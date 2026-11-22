@@ -17,7 +17,7 @@ function pngBlob(image: StickerImage) {
 
 export async function copySticker(image: StickerImage) {
   if (!CAN_COPY_IMAGES) {
-    throw new Error('This browser cannot copy images. Long-press the sticker instead.')
+    throw new Error("This browser can't copy images. Use Share or Download instead.")
   }
   await navigator.clipboard.write([new ClipboardItem({ [PNG_TYPE]: pngBlob(image) })])
 }

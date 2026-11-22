@@ -47,10 +47,16 @@ src/styles.css        the preset's tokens (dark via prefers-color-scheme) and th
 - The sticker is drawn on a canvas from `StickerData`. `renderSticker`
   (`src/sticker/render-sticker.ts`) picks the layout by `StickerData.style`, draws at 3x and
   returns a PNG data URL; the preview shows that same image, so preview and export never drift.
-  Long-pressing the preview image is the browser's own copy/save fallback.
+  The preview's own long-press copies through the app (below), so the browser's image menu is off.
 - Text is measured and drawn character by character (`sticker-drawing.ts`) so tracking works in
   browsers without `CanvasRenderingContext2D.letterSpacing`. Layout waits for
   `STICKER_FONTS_READY` via `use()` under a Suspense boundary.
+- Preview gestures (`use-preview-gestures.ts`, maths in `preview-gestures.ts` with tests): swipe
+  left/right steps the style, double-tap flips the background, hold for 0.5 s then release copies.
+  The copy fires on release because clipboard writes need the touch-end user gesture. The layer is
+  `touch-pan-y`, so vertical scrolling stays native, and it sits under the background pills.
+- Sticker options live in a non-modal Base UI drawer (`options-drawer.tsx`) whose handle in the
+  export bar is a `DrawerSwipeArea`: tap or swipe up to open, swipe down or Done to close.
 - Copy and Share must call `navigator.clipboard.write` / `navigator.share` synchronously inside
   the click handler (iOS Safari drops the user gesture after an `await`). Both need a secure
   context: test on a phone over HTTPS, not a LAN `http://` address.

@@ -33,7 +33,7 @@ const INK_LABELS = {
   dark: 'Dark',
 } as const satisfies Record<StickerInk, string>
 
-const STYLE_LABELS = {
+export const STYLE_LABELS = {
   minimal: 'Minimal',
   strip: 'Strip',
   editorial: 'Editorial',
