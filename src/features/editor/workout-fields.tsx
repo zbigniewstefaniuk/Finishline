@@ -1,5 +1,6 @@
 import type { Dispatch, HTMLAttributes } from 'react'
 import { Badge } from '~/components/ui/badge'
+import { FieldLegend, FieldSet } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { ACTIVITIES } from '~/domain/activity'
 import { formatPace, paceStyleOf } from '~/domain/pace'
@@ -18,24 +19,34 @@ import { FieldRow, blurOnEnter } from './field-row'
 
 type InputMode = HTMLAttributes<HTMLInputElement>['inputMode']
 
+const WORKOUT_INPUT_IDS = {
+  distance: 'workout-distance',
+  time: 'workout-time',
+  date: 'workout-date',
+  heartRate: 'workout-heart-rate',
+  calories: 'workout-calories',
+  elevation: 'workout-elevation',
+} as const
+
 function NumberInput({
   field,
-  label,
   value,
   placeholder,
   inputMode,
+  isInvalid,
   dispatch,
 }: {
   field: TextField
-  label: string
   value: string
   placeholder: string
   inputMode: InputMode
+  isInvalid: boolean
   dispatch: Dispatch<EditorAction>
 }) {
   return (
     <Input
-      aria-label={label}
+      id={WORKOUT_INPUT_IDS[field]}
+      aria-invalid={isInvalid}
       className="h-9 w-32 text-right text-base font-medium tabular-nums"
       value={value}
       placeholder={placeholder}
@@ -74,49 +85,76 @@ export function WorkoutFields({
     : '–'
 
   return (
-    <div>
-      <h2 className="mt-1 mb-0.5 text-sm font-medium text-muted-foreground">Workout</h2>
+    <FieldSet className="gap-0">
+      <FieldLegend variant="label" className="mt-1 mb-0.5 text-muted-foreground">
+        Workout
+      </FieldLegend>
       <EditorNoticeBanner notice={notice} dispatch={dispatch} />
-      <FieldRow label="Distance" unit={distanceUnit} error={errors.distance} hasSeparator>
+      <FieldRow
+        label="Distance"
+        htmlFor={WORKOUT_INPUT_IDS.distance}
+        unit={distanceUnit}
+        error={errors.distance}
+        hasSeparator
+      >
         <NumberInput
           field="distance"
-          label="Distance"
+          isInvalid={errors.distance !== undefined}
           value={form.distance}
           placeholder="0"
           inputMode={distanceUnit === 'm' ? 'numeric' : 'decimal'}
           dispatch={dispatch}
         />
       </FieldRow>
-      <FieldRow label="Time" unit="" error={errors.time} hasSeparator>
+      <FieldRow
+        label="Time"
+        htmlFor={WORKOUT_INPUT_IDS.time}
+        unit=""
+        error={errors.time}
+        hasSeparator
+      >
         <NumberInput
           field="time"
-          label="Time"
+          isInvalid={errors.time !== undefined}
           value={form.time}
           placeholder="mm:ss"
           inputMode="text"
           dispatch={dispatch}
         />
       </FieldRow>
-      <FieldRow label="Date" hasSeparator>
+      <FieldRow label="Date" htmlFor={WORKOUT_INPUT_IDS.date} hasSeparator>
         <DateField
+          id={WORKOUT_INPUT_IDS.date}
           value={form.date}
           onChange={(date) => dispatch({ type: 'set-date', date })}
         />
       </FieldRow>
-      <FieldRow label="Avg heart rate" unit="bpm" error={errors.heartRate} hasSeparator>
+      <FieldRow
+        label="Avg heart rate"
+        htmlFor={WORKOUT_INPUT_IDS.heartRate}
+        unit="bpm"
+        error={errors.heartRate}
+        hasSeparator
+      >
         <NumberInput
           field="heartRate"
-          label="Average heart rate"
+          isInvalid={errors.heartRate !== undefined}
           value={form.heartRate}
           placeholder="Optional"
           inputMode="numeric"
           dispatch={dispatch}
         />
       </FieldRow>
-      <FieldRow label="Calories" unit="kcal" error={errors.calories} hasSeparator>
+      <FieldRow
+        label="Calories"
+        htmlFor={WORKOUT_INPUT_IDS.calories}
+        unit="kcal"
+        error={errors.calories}
+        hasSeparator
+      >
         <NumberInput
           field="calories"
-          label="Calories"
+          isInvalid={errors.calories !== undefined}
           value={form.calories}
           placeholder="Optional"
           inputMode="numeric"
@@ -124,10 +162,16 @@ export function WorkoutFields({
         />
       </FieldRow>
       {ACTIVITIES[form.activity].tracksElevation ? (
-        <FieldRow label="Elevation gain" unit="m" error={errors.elevation} hasSeparator>
+        <FieldRow
+          label="Elevation gain"
+          htmlFor={WORKOUT_INPUT_IDS.elevation}
+          unit="m"
+          error={errors.elevation}
+          hasSeparator
+        >
           <NumberInput
             field="elevation"
-            label="Elevation gain"
+            isInvalid={errors.elevation !== undefined}
             value={form.elevation}
             placeholder="Optional"
             inputMode="numeric"
@@ -146,6 +190,6 @@ export function WorkoutFields({
           {pace}
         </span>
       </FieldRow>
-    </div>
+    </FieldSet>
   )
 }

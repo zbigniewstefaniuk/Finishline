@@ -95,6 +95,9 @@ export default defineConfig({
         'react/jsx-no-constructed-context-values': 'off',
         '@typescript-eslint/no-unsafe-type-assertion': 'off',
         '@typescript-eslint/prefer-nullish-coalescing': 'off',
+        '@typescript-eslint/array-type': 'off',
+        '@typescript-eslint/no-unnecessary-condition': 'off',
+        'react/no-array-index-key': 'off',
       },
     },
     {

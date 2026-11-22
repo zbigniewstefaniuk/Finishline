@@ -73,4 +73,4 @@ src/styles.css        the preset's tokens (dark via prefers-color-scheme) and th
 - No `useMemo` / `useCallback` / `React.memo`. React Compiler bails on `try/finally` in
   components; keep handlers to `try/catch`.
 - oxlint runs with `--disable-nested-config` so it never loads `native/oxlint.config.mts`, and
-  relaxes three style rules for the generated `src/components/ui`.
+  relaxes the style rules the generated `src/components/ui` trips.

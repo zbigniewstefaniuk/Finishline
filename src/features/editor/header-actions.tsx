@@ -1,6 +1,7 @@
 import { useRef, useState, type Dispatch } from 'react'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
+import { Spinner } from '~/components/ui/spinner'
 import { parseWorkoutScan } from '~/domain/workout-scan'
 import { readScreenshotLines } from '~/scan/read-screenshot'
 import type { EditorAction } from './editor-state'
@@ -46,6 +47,7 @@ export function HeaderActions({ dispatch }: { dispatch: Dispatch<EditorAction> }
         disabled={isReading}
         onClick={() => fileInputRef.current?.click()}
       >
+        {isReading ? <Spinner data-icon="inline-start" /> : null}
         {isReading ? 'Reading…' : 'Upload'}
       </Button>
       <input
