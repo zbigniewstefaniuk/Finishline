@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   formatClock,
   formatDate,
-  formatInputDate,
   formatDistance,
   formatDistanceInput,
   formatGrouped,
@@ -68,12 +67,6 @@ describe('formatDistanceInput', () => {
 describe('formatDate', () => {
   it('formats as day.month.year with padding', () => {
     expect(formatDate(new Date(2026, 10, 2))).toBe('02.11.2026')
-  })
-})
-
-describe('formatInputDate', () => {
-  it('formats a local date as yyyy-mm-dd for date inputs', () => {
-    expect(formatInputDate(new Date(2026, 10, 2))).toBe('2026-11-02')
   })
 })
 

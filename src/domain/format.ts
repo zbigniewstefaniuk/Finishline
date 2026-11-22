@@ -49,10 +49,6 @@ export function formatDate(date: Date) {
   return `${padTwo(date.getDate())}.${padTwo(date.getMonth() + 1)}.${date.getFullYear()}`
 }
 
-export function formatInputDate(date: Date) {
-  return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}-${padTwo(date.getDate())}`
-}
-
 export function formatList(items: string[]) {
   const last = items.at(-1) ?? ''
   const rest = items.slice(0, -1)

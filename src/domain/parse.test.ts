@@ -3,7 +3,6 @@ import {
   parseDecimal,
   parseDistanceMeters,
   parseDuration,
-  parseInputDate,
   parseWholeNumber,
 } from './parse'
 
@@ -71,15 +70,5 @@ describe('parseDistanceMeters', () => {
 
   it('returns null for an unparseable distance', () => {
     expect(parseDistanceMeters({ text: '10 km', activity: 'ride' })).toBeNull()
-  })
-})
-
-describe('parseInputDate', () => {
-  it('reads a yyyy-mm-dd date input value as a local date', () => {
-    expect(parseInputDate('2026-11-02')).toEqual(new Date(2026, 10, 2))
-  })
-
-  it('returns null for a cleared date input', () => {
-    expect(parseInputDate('')).toBeNull()
   })
 })
