@@ -280,4 +280,56 @@ Give kudos to your friends
     expect(scan('Morning Run\n800 m').distanceMeters).toBeUndefined()
     expect(scan('Pool Swim\n800 m').distanceMeters).toBe(800)
   })
+
+  it('reads a low-resolution Garmin run, skipping the status bar clock', () => {
+    const result = scan(`
+9:41
+Running
+
+3.24.
+Distance
+
+165 bpm          12:12 mi
+Avg Heart Rate   vg Pace
+
+39:29            397
+Tota ime.        Total Calories
+`)
+    expect(result).toEqual({
+      activity: 'run',
+      distanceMeters: 3.24 * 1609.344,
+      durationSeconds: 2369,
+      avgHeartRate: 165,
+      calories: 397,
+    })
+  })
+
+  it('reads a bare distance under its label in the sport unit when the page has no miles', () => {
+    expect(scan('Morning Run\n10.02\nDistance\n4:54 /km').distanceMeters).toBe(10_020)
+    expect(scan('Pool Swim\n1,250\nDistance').distanceMeters).toBe(1250)
+  })
+
+  it('takes the sport from the pace unit when the screen never names it', () => {
+    const result = scan(`
+Congrats! You just set your 3rd fastest time in the 10k!
+
+Distance          Avg Pace
+10.01 km          5:21 /km
+
+Moving Time       Elevation Gain
+53:37             118 m
+
+Calories          Avg Cadence
+839 Cal           167 spm
+`)
+    expect(result).toEqual({
+      activity: 'run',
+      distanceMeters: 10_010,
+      durationSeconds: 3217,
+      calories: 839,
+      elevationGainMeters: 118,
+    })
+    expect(scan('Distance\n1,250 m\nPace\n1:58 /100m').activity).toBe('pool-swim')
+    expect(scan('Distance\n42.3 km\nAvg Speed\n28.4 km/h').activity).toBe('ride')
+  })
 })
