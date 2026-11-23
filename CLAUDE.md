@@ -71,6 +71,9 @@ src/styles.css        the preset's tokens (dark via prefers-color-scheme) and th
   `apply-scan`. Test parser changes with a text layout sample in `workout-scan.test.ts`.
 - UI is shadcn components and Tailwind classes on the preset's tokens. The only hand-written CSS
   is the preview stage, whose gradients stand in for the Story background.
+- Keep on-demand UI out of the startup bundle. The date picker (`date-picker.tsx`: Popover,
+  Calendar, react-day-picker, about 40 kB gzipped) is `lazy()`-loaded by `date-field.tsx`. The
+  load starts on touch-down and the picker opens on the first tap. Tesseract is lazy too.
 - Every build writes `version.json` (`appVersionPlugin` in `vite.config.ts`). The app polls it
   every 2 minutes and on focus and offers a reload when it changes; a lazy chunk that fails to
   load after a deploy reloads once.

@@ -1,11 +1,11 @@
-import { RiCalendarLine } from '@remixicon/react'
-import { useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { Calendar } from '~/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
-import { formatDate } from '~/domain/format'
+import { Suspense, lazy, useState } from 'react'
+import { DateButton } from './date-button'
 
-const MONDAY = 1
+function loadDatePicker() {
+  return import('./date-picker').then((module) => ({ default: module.DatePicker }))
+}
+
+const DatePicker = lazy(loadDatePicker)
 
 export function DateField({
   id,
@@ -16,38 +16,21 @@ export function DateField({
   value: Date
   onChange: (date: Date) => void
 }) {
-  const [today] = useState(() => new Date())
-  const [isOpen, setIsOpen] = useState(false)
+  const [isPickerLoaded, setIsPickerLoaded] = useState(false)
 
+  if (!isPickerLoaded) {
+    return (
+      <DateButton
+        id={id}
+        date={value}
+        onPointerDown={() => void loadDatePicker()}
+        onClick={() => setIsPickerLoaded(true)}
+      />
+    )
+  }
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            id={id}
-            variant="secondary"
-            className="h-9 px-3 text-base font-medium tabular-nums"
-          />
-        }
-      >
-        <RiCalendarLine data-icon="inline-start" aria-hidden="true" />
-        {formatDate(value)}
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-auto p-0">
-        <Calendar
-          mode="single"
-          required
-          selected={value}
-          defaultMonth={value}
-          weekStartsOn={MONDAY}
-          endMonth={today}
-          disabled={{ after: today }}
-          onSelect={(date) => {
-            onChange(date)
-            setIsOpen(false)
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+    <Suspense fallback={<DateButton id={id} date={value} disabled />}>
+      <DatePicker id={id} value={value} onChange={onChange} />
+    </Suspense>
   )
 }
