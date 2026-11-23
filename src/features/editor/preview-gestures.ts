@@ -4,6 +4,10 @@ export type PointerSample = { x: number; y: number; time: number }
 
 export type PreviewGesture = 'swipe-left' | 'swipe-right' | 'long-press' | 'tap' | 'none'
 
+export type SwipeGesture = Extract<PreviewGesture, 'swipe-left' | 'swipe-right'>
+
+export type EntrySide = 'left' | 'right'
+
 export const GESTURE = {
   swipeMinDistance: 48,
   swipeAxisRatio: 1.5,
@@ -11,6 +15,7 @@ export const GESTURE = {
   longPressMs: 500,
   doubleTapMs: 300,
   doubleTapMaxDistance: 30,
+  wheelEndMs: 150,
 } as const
 
 function distance({ from, to }: { from: PointerSample; to: PointerSample }) {
@@ -44,6 +49,21 @@ export function classifyGesture({
   return end.time - start.time >= GESTURE.longPressMs ? 'long-press' : 'tap'
 }
 
+export function isHorizontalWheel({
+  deltaX,
+  deltaY,
+}: {
+  deltaX: number
+  deltaY: number
+}) {
+  return Math.abs(deltaX) > Math.abs(deltaY) * GESTURE.swipeAxisRatio
+}
+
+export function wheelSwipe(travel: number): SwipeGesture | null {
+  if (Math.abs(travel) < GESTURE.swipeMinDistance) return null
+  return travel > 0 ? 'swipe-left' : 'swipe-right'
+}
+
 export function isDoubleTap({
   previous,
   current,
@@ -63,9 +83,22 @@ export function swipedStyle({
   gesture,
 }: {
   style: StickerStyle
-  gesture: 'swipe-left' | 'swipe-right'
+  gesture: SwipeGesture
 }) {
   const step = gesture === 'swipe-left' ? 1 : -1
   const index = STICKER_STYLES.indexOf(style) + step
   return STICKER_STYLES[index] ?? style
+}
+
+export function entrySide({
+  from,
+  to,
+}: {
+  from: StickerStyle | null
+  to: StickerStyle | null
+}): EntrySide | null {
+  if (!from || !to) return null
+  const step = STICKER_STYLES.indexOf(to) - STICKER_STYLES.indexOf(from)
+  if (step === 0) return null
+  return step > 0 ? 'right' : 'left'
 }

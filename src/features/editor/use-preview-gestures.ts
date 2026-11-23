@@ -4,14 +4,15 @@ import {
   classifyGesture,
   isDoubleTap,
   isHorizontalDrag,
+  isHorizontalWheel,
+  wheelSwipe,
   type PointerSample,
   type PreviewGesture,
+  type SwipeGesture,
 } from './preview-gestures'
 
-const DRAG_RESISTANCE = 0.35
+const DRAG_FOLLOW = { cursor: 1, finger: 0.35 } as const
 const HOLD_HAPTIC_MS = 12
-
-type SwipeGesture = Extract<PreviewGesture, 'swipe-left' | 'swipe-right'>
 
 function sampleOf(event: PointerEvent<HTMLElement>): PointerSample {
   return { x: event.clientX, y: event.clientY, time: event.timeStamp }
@@ -33,16 +34,46 @@ export function usePreviewGestures({
   const startRef = useRef<PointerSample | null>(null)
   const lastTapRef = useRef<PointerSample | null>(null)
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const wheelRef = useRef({ travel: 0, hasSwiped: false })
+  const wheelEndTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [dragX, setDragX] = useState(0)
   const [isHolding, setIsHolding] = useState(false)
 
-  useEffect(() => () => clearTimeout(holdTimerRef.current), [])
+  useEffect(
+    () => () => {
+      clearTimeout(holdTimerRef.current)
+      clearTimeout(wheelEndTimerRef.current)
+    },
+    [],
+  )
 
   function reset() {
     clearTimeout(holdTimerRef.current)
     startRef.current = null
     setDragX(0)
     setIsHolding(false)
+  }
+
+  function onWheel(event: WheelEvent) {
+    if (!isHorizontalWheel(event)) return
+    event.preventDefault()
+    clearTimeout(wheelEndTimerRef.current)
+    wheelEndTimerRef.current = setTimeout(() => {
+      wheelRef.current = { travel: 0, hasSwiped: false }
+      setDragX(0)
+    }, GESTURE.wheelEndMs)
+    const wheel = wheelRef.current
+    if (wheel.hasSwiped) return
+    wheel.travel += event.deltaX
+    const gesture = wheelSwipe(wheel.travel)
+    if (!gesture) {
+      setDragX(-wheel.travel * DRAG_FOLLOW.finger)
+      return
+    }
+    wheel.hasSwiped = true
+    setDragX(0)
+    lastTapRef.current = null
+    onSwipe(gesture)
   }
 
   function respond({ gesture, end }: { gesture: PreviewGesture; end: PointerSample }) {
@@ -74,8 +105,14 @@ export function usePreviewGestures({
     dragX,
     isHolding,
     handlers: {
+      ref: (layer: HTMLElement | null) => {
+        if (!layer) return
+        layer.addEventListener('wheel', onWheel, { passive: false })
+        return () => layer.removeEventListener('wheel', onWheel)
+      },
       onPointerDown: (event: PointerEvent<HTMLElement>) => {
-        if (!event.isPrimary) return
+        const isMainButton = event.isPrimary && event.button === 0
+        if (!isMainButton) return
         event.currentTarget.setPointerCapture(event.pointerId)
         startRef.current = sampleOf(event)
         holdTimerRef.current = setTimeout(() => {
@@ -93,9 +130,10 @@ export function usePreviewGestures({
           clearTimeout(holdTimerRef.current)
           setIsHolding(false)
         }
-        if (isHorizontalDrag({ start, current })) {
-          setDragX((current.x - start.x) * DRAG_RESISTANCE)
-        }
+        if (!isHorizontalDrag({ start, current })) return
+        const follow =
+          event.pointerType === 'mouse' ? DRAG_FOLLOW.cursor : DRAG_FOLLOW.finger
+        setDragX((current.x - start.x) * follow)
       },
       onPointerUp: (event: PointerEvent<HTMLElement>) => {
         const start = startRef.current

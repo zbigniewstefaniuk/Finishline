@@ -53,9 +53,10 @@ src/styles.css        the preset's tokens (dark via prefers-color-scheme) and th
   browsers without `CanvasRenderingContext2D.letterSpacing`. Layout waits for
   `STICKER_FONTS_READY` via `use()` under a Suspense boundary.
 - Preview gestures (`use-preview-gestures.ts`, maths in `preview-gestures.ts` with tests): swipe
-  left/right steps the style, double-tap flips the background, hold for 0.5 s then release copies.
-  The copy fires on release because clipboard writes need the touch-end user gesture. The layer is
-  `touch-pan-y`, so vertical scrolling stays native, and it sits under the background pills.
+  left/right (or a sideways trackpad scroll, one step per scroll) steps the style, double-tap flips
+  the background, hold for 0.5 s then release copies. The copy fires on release because clipboard
+  writes need the touch-end user gesture. The layer is `touch-pan-y`, so vertical scrolling stays
+  native, and it sits under the style dots (buttons) and the background pills.
 - Sticker options live in a non-modal Base UI drawer (`options-drawer.tsx`) whose handle in the
   export bar is a `DrawerSwipeArea`: tap or swipe up to open, swipe down or Done to close.
 - Copy and Share must call `navigator.clipboard.write` / `navigator.share` synchronously inside
