@@ -12,6 +12,7 @@ import {
   valueRuns,
   type Block,
   type MeasuredText,
+  type Placeable,
   type StickerLayout,
   type TextSpec,
 } from './sticker-drawing'
@@ -75,12 +76,6 @@ const TEXT = {
   },
 } as const satisfies Record<string, TextSpec>
 
-type Column = {
-  width: number
-  height: number
-  place: (origin: { x: number; y: number }) => Block[]
-}
-
 function valueColumn({
   id,
   value,
@@ -89,7 +84,7 @@ function valueColumn({
   id: string
   value: MeasuredText
   label: MeasuredText
-}): Column {
+}): Placeable {
   return {
     width: Math.max(value.width, label.width),
     height: value.height + GAP.valueToLabel + label.height,
@@ -113,7 +108,7 @@ function identityColumn({
   data: StickerData
   title: MeasuredText
   date: MeasuredText | null
-}): Column {
+}): Placeable {
   const titleOffset = ICON_BOX.height + GAP.iconToTitle
   const dateOffset = titleOffset + title.height + GAP.titleToDate
   return {

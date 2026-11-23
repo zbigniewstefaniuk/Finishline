@@ -7,7 +7,15 @@ export const STICKER_INKS = ['light', 'dark'] as const
 
 export type StickerInk = (typeof STICKER_INKS)[number]
 
-export const STICKER_STYLES = ['minimal', 'strip', 'editorial'] as const
+export const STICKER_STYLES = [
+  'minimal',
+  'strip',
+  'editorial',
+  'grid',
+  'stack',
+  'caption',
+  'bib',
+] as const
 
 export type StickerStyle = (typeof STICKER_STYLES)[number]
 

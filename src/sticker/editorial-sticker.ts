@@ -1,12 +1,11 @@
 import type { StickerData } from '~/domain/sticker-data'
-import { ICON_BOX } from './activity-icons'
 import {
   FONT_WEIGHT,
   INK_COLORS,
   OPACITY,
   RULE_THICKNESS,
   STICKER_PADDING,
-  iconBlock,
+  headerRow,
   measureText,
   textBlock,
   valueRuns,
@@ -19,7 +18,6 @@ import {
 const MIN_CONTENT_WIDTH = 240
 
 const GAP = {
-  iconToTitle: 10,
   afterHeader: 14,
   afterHero: 10,
   beforeStats: 20,
@@ -133,7 +131,10 @@ function layoutRow({
 export function layoutEditorialSticker(data: StickerData): StickerLayout {
   const ink = INK_COLORS[data.ink]
 
-  const title = measureText([{ text: data.title.toUpperCase(), spec: TEXT.title }])
+  const header = headerRow({
+    activity: data.activity,
+    title: measureText([{ text: data.title.toUpperCase(), spec: TEXT.title }]),
+  })
   const hero = measureText(
     valueRuns({ stat: data.hero, valueSpec: TEXT.hero, unitSpec: TEXT.heroUnit }),
   )
@@ -149,10 +150,9 @@ export function layoutEditorialSticker(data: StickerData): StickerLayout {
     ),
   }))
 
-  const headerWidth = ICON_BOX.width + GAP.iconToTitle + title.width
   const contentWidth = Math.max(
     MIN_CONTENT_WIDTH,
-    headerWidth,
+    header.width,
     hero.width,
     heroLabel.width,
     date?.width ?? 0,
@@ -160,9 +160,7 @@ export function layoutEditorialSticker(data: StickerData): StickerLayout {
   )
   const right = STICKER_PADDING + contentWidth
 
-  const headerHeight = Math.max(ICON_BOX.height, title.height)
-  const headerTop = STICKER_PADDING
-  const heroY = headerTop + headerHeight + GAP.afterHeader
+  const heroY = STICKER_PADDING + header.height + GAP.afterHeader
   const heroLabelY = heroY + hero.height + GAP.afterHero
   const heroBottom = heroLabelY + heroLabel.height
 
@@ -177,17 +175,7 @@ export function layoutEditorialSticker(data: StickerData): StickerLayout {
   const dateY = contentBottom + GAP.beforeDate
 
   const blocks: Block[] = [
-    iconBlock({
-      activity: data.activity,
-      x: STICKER_PADDING,
-      y: headerTop + (headerHeight - ICON_BOX.height) / 2,
-    }),
-    textBlock({
-      id: 'title',
-      text: title,
-      x: STICKER_PADDING + ICON_BOX.width + GAP.iconToTitle,
-      y: headerTop + (headerHeight - title.height) / 2,
-    }),
+    ...header.place({ x: STICKER_PADDING, y: STICKER_PADDING }),
     textBlock({ id: 'hero', text: hero, x: STICKER_PADDING, y: heroY }),
     textBlock({ id: 'hero-label', text: heroLabel, x: STICKER_PADDING, y: heroLabelY }),
     ...rowBlocks,
