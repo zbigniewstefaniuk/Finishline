@@ -37,6 +37,10 @@ export const STYLE_LABELS = {
   minimal: 'Minimal',
   strip: 'Strip',
   editorial: 'Editorial',
+  grid: 'Grid',
+  stack: 'Stack',
+  caption: 'Caption',
+  bib: 'Race bib',
 } as const satisfies Record<StickerStyle, string>
 
 function chipHint({ isFull, missing }: { isFull: boolean; missing: string[] }) {

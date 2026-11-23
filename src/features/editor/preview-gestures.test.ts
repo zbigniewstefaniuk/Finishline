@@ -61,6 +61,6 @@ describe('swipedStyle', () => {
 
   it('stays put at either end', () => {
     expect(swipedStyle({ style: 'minimal', gesture: 'swipe-right' })).toBe('minimal')
-    expect(swipedStyle({ style: 'editorial', gesture: 'swipe-left' })).toBe('editorial')
+    expect(swipedStyle({ style: 'bib', gesture: 'swipe-left' })).toBe('bib')
   })
 })

@@ -50,6 +50,16 @@ export type Block =
   | { kind: 'text'; id: string; text: MeasuredText; x: number; y: number }
   | { kind: 'icon'; id: string; x: number; y: number; primary: string; secondary: string }
   | { kind: 'rule'; id: string; x: number; y: number; width: number; height: number }
+  | {
+      kind: 'frame'
+      id: string
+      x: number
+      y: number
+      width: number
+      height: number
+      radius: number
+      lineWidth: number
+    }
 
 export type StickerLayout = {
   width: number
@@ -57,6 +67,14 @@ export type StickerLayout = {
   ink: string
   blocks: Block[]
 }
+
+export type Placeable = {
+  width: number
+  height: number
+  place: (origin: { x: number; y: number }) => Block[]
+}
+
+const ICON_TO_TITLE_GAP = 10
 
 export function canvasContext(canvas: HTMLCanvasElement) {
   const context = canvas.getContext('2d')
@@ -143,6 +161,29 @@ export function iconBlock({
   return { kind: 'icon', id: 'icon', x, y, ...ACTIVITY_ICONS[activity] }
 }
 
+export function headerRow({
+  activity,
+  title,
+}: {
+  activity: ActivityType
+  title: MeasuredText
+}): Placeable {
+  const height = Math.max(ICON_BOX.height, title.height)
+  return {
+    width: ICON_BOX.width + ICON_TO_TITLE_GAP + title.width,
+    height,
+    place: ({ x, y }) => [
+      iconBlock({ activity, x, y: y + (height - ICON_BOX.height) / 2 }),
+      textBlock({
+        id: 'title',
+        text: title,
+        x: x + ICON_BOX.width + ICON_TO_TITLE_GAP,
+        y: y + (height - title.height) / 2,
+      }),
+    ],
+  }
+}
+
 function drawRun({
   context,
   run,
@@ -194,6 +235,14 @@ export function drawSticker({
       case 'rule': {
         context.globalAlpha = OPACITY.rule
         context.fillRect(block.x, block.y, block.width, block.height)
+        break
+      }
+      case 'frame': {
+        context.globalAlpha = OPACITY.full
+        context.lineWidth = block.lineWidth
+        context.beginPath()
+        context.roundRect(block.x, block.y, block.width, block.height, block.radius)
+        context.stroke()
         break
       }
     }

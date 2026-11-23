@@ -1,7 +1,11 @@
 import type { StickerData, StickerStyle } from '~/domain/sticker-data'
+import { layoutBibSticker } from './bib-sticker'
+import { layoutCaptionSticker } from './caption-sticker'
 import { layoutEditorialSticker } from './editorial-sticker'
+import { layoutGridSticker } from './grid-sticker'
 import { layoutMinimalSticker } from './minimal-sticker'
 import { canvasContext, drawSticker, type StickerLayout } from './sticker-drawing'
+import { layoutStackSticker } from './stack-sticker'
 import { layoutStripSticker } from './strip-sticker'
 
 const EXPORT_SCALE = 3
@@ -10,6 +14,10 @@ const STICKER_LAYOUTS = {
   minimal: layoutMinimalSticker,
   strip: layoutStripSticker,
   editorial: layoutEditorialSticker,
+  grid: layoutGridSticker,
+  stack: layoutStackSticker,
+  caption: layoutCaptionSticker,
+  bib: layoutBibSticker,
 } as const satisfies Record<StickerStyle, (data: StickerData) => StickerLayout>
 
 export type StickerImage = { url: string; width: number; height: number }
