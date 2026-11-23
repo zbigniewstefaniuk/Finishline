@@ -1,4 +1,4 @@
-import type { Dispatch } from 'react'
+import { useState, type Dispatch } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '~/components/ui/toggle-group'
 import { STICKER_STYLES, type StickerStyle } from '~/domain/sticker-data'
 import { cn } from '~/lib/utils'
@@ -8,7 +8,8 @@ import {
   type EditorAction,
   type PreviewBackground,
 } from './editor-state'
-import { swipedStyle } from './preview-gestures'
+import { entrySide, swipedStyle, type EntrySide } from './preview-gestures'
+import { STYLE_LABELS } from './sticker-options'
 import { usePreviewGestures } from './use-preview-gestures'
 
 const BACKGROUND_LABELS = {
@@ -34,6 +35,17 @@ export function PreviewStage({
   onLongPress: () => void
 }) {
   const otherBackground = PREVIEW_BACKGROUNDS.find((key) => key !== background)
+  const [entry, setEntry] = useState<{
+    style: StickerStyle | null
+    side: EntrySide | null
+  }>({ style: renderedStyle, side: null })
+  if (renderedStyle !== entry.style) {
+    setEntry({
+      style: renderedStyle,
+      side: entrySide({ from: entry.style, to: renderedStyle }),
+    })
+  }
+  const isSwitchingStyle = image !== null && renderedStyle !== stickerStyle
   const gestures = usePreviewGestures({
     onSwipe: (gesture) =>
       dispatch({
@@ -54,34 +66,22 @@ export function PreviewStage({
       aria-label="Sticker preview. Swipe to change style, double-tap to switch background, hold to copy."
     >
       <div
-        className="absolute inset-0 touch-pan-y select-none"
+        className="absolute inset-0 cursor-grab touch-pan-y select-none active:cursor-grabbing"
         onContextMenu={(event) => event.preventDefault()}
         {...gestures.handlers}
       >
         <div
-          aria-hidden="true"
-          className="absolute top-3 left-1/2 flex -translate-x-1/2 gap-1.5"
-        >
-          {STICKER_STYLES.map((style) => (
-            <span
-              key={style}
-              className={cn(
-                'h-1.5 w-1.5 rounded-full bg-(--pill-muted) transition-all',
-                style === stickerStyle && 'w-4 bg-(--pill-ink)',
-              )}
-            />
-          ))}
-        </div>
-        <div
           className={cn(
             'absolute inset-x-6 top-6 bottom-16 flex items-center justify-center',
-            gestures.dragX === 0 && 'transition-transform duration-200',
+            gestures.dragX === 0 &&
+              !isSwitchingStyle &&
+              'transition-transform duration-200',
           )}
           style={{
             transform: `translateX(${gestures.dragX}px) scale(${gestures.isHolding ? 0.96 : 1})`,
           }}
         >
-          {image ? (
+          {image && !isSwitchingStyle ? (
             <img
               key={renderedStyle}
               src={image.url}
@@ -89,7 +89,11 @@ export function PreviewStage({
               height={image.height}
               alt="Sticker"
               draggable={false}
-              className="pointer-events-none h-auto max-h-full max-w-full object-contain motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
+              className={cn(
+                'pointer-events-none h-auto max-h-full max-w-full object-contain motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95',
+                entry.side === 'right' && 'motion-safe:slide-in-from-right-8',
+                entry.side === 'left' && 'motion-safe:slide-in-from-left-8',
+              )}
             />
           ) : null}
           {hasWorkout ? null : (
@@ -98,6 +102,29 @@ export function PreviewStage({
             </p>
           )}
         </div>
+      </div>
+      <div
+        role="group"
+        aria-label="Sticker style"
+        className="absolute top-0.75 left-1/2 flex -translate-x-1/2"
+      >
+        {STICKER_STYLES.map((style) => (
+          <button
+            key={style}
+            type="button"
+            aria-label={STYLE_LABELS[style]}
+            aria-pressed={style === stickerStyle}
+            className="group flex h-6 cursor-pointer items-center rounded-full px-0.75 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+            onClick={() => dispatch({ type: 'set-style', style })}
+          >
+            <span
+              className={cn(
+                'h-1.5 w-1.5 rounded-full bg-(--pill-muted) transition-all group-hover:bg-(--pill-ink)',
+                style === stickerStyle && 'w-4 bg-(--pill-ink)',
+              )}
+            />
+          </button>
+        ))}
       </div>
       <ToggleGroup
         aria-label="Preview background"

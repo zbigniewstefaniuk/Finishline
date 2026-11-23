@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { classifyGesture, isDoubleTap, swipedStyle } from './preview-gestures'
+import {
+  classifyGesture,
+  entrySide,
+  isDoubleTap,
+  isHorizontalWheel,
+  swipedStyle,
+  wheelSwipe,
+} from './preview-gestures'
 
 const at = ([x, y, time]: [number, number, number]) => ({ x, y, time })
 
@@ -62,5 +69,33 @@ describe('swipedStyle', () => {
   it('stays put at either end', () => {
     expect(swipedStyle({ style: 'minimal', gesture: 'swipe-right' })).toBe('minimal')
     expect(swipedStyle({ style: 'bib', gesture: 'swipe-left' })).toBe('bib')
+  })
+})
+
+describe('isHorizontalWheel', () => {
+  it('takes a sideways trackpad swipe and leaves vertical scrolling to the page', () => {
+    expect(isHorizontalWheel({ deltaX: 12, deltaY: 2 })).toBe(true)
+    expect(isHorizontalWheel({ deltaX: 4, deltaY: 30 })).toBe(false)
+    expect(isHorizontalWheel({ deltaX: 0, deltaY: 0 })).toBe(false)
+  })
+})
+
+describe('wheelSwipe', () => {
+  it('steps once the scroll travels a swipe, scrolling right meaning the next style', () => {
+    expect(wheelSwipe(30)).toBeNull()
+    expect(wheelSwipe(60)).toBe('swipe-left')
+    expect(wheelSwipe(-60)).toBe('swipe-right')
+  })
+})
+
+describe('entrySide', () => {
+  it('brings a later style in from the right and an earlier one from the left', () => {
+    expect(entrySide({ from: 'minimal', to: 'editorial' })).toBe('right')
+    expect(entrySide({ from: 'bib', to: 'grid' })).toBe('left')
+  })
+
+  it('has no side for the first sticker or the same style', () => {
+    expect(entrySide({ from: null, to: 'minimal' })).toBeNull()
+    expect(entrySide({ from: 'strip', to: 'strip' })).toBeNull()
   })
 })
