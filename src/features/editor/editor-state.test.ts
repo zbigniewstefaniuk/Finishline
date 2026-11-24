@@ -79,12 +79,13 @@ describe('editorReducer', () => {
     expect(state.sticker.stats).toEqual(['time', 'pace'])
   })
 
-  it('updates the sticker title, date visibility, ink and style', () => {
+  it('updates the sticker title, date visibility, ink, style and season', () => {
     const state = apply(
       { type: 'set-title', title: 'Lake Zurich' },
       { type: 'toggle-date' },
       { type: 'set-ink', ink: 'dark' },
       { type: 'set-style', style: 'editorial' },
+      { type: 'set-season', season: 'advent' },
     )
     expect(state.sticker).toEqual({
       stats: ['time', 'pace'],
@@ -92,6 +93,7 @@ describe('editorReducer', () => {
       showsDate: false,
       ink: 'dark',
       style: 'editorial',
+      season: 'advent',
     })
   })
 })
@@ -198,6 +200,7 @@ describe('start new', () => {
       { type: 'set-title', title: 'Uetliberg' },
       { type: 'set-ink', ink: 'dark' },
       { type: 'set-style', style: 'strip' },
+      { type: 'set-season', season: 'advent' },
       { type: 'set-background', background: 'light' },
     )
     const state = editorReducer(before, { type: 'start-new', today: NEXT_DAY })
@@ -216,6 +219,7 @@ describe('start new', () => {
       showsDate: true,
       ink: 'light',
       style: 'minimal',
+      season: 'off',
     })
     expect(state.background).toBe('light')
     expect(state.lastWorkout).toBeNull()

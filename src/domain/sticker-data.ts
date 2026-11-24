@@ -19,6 +19,12 @@ export const STICKER_STYLES = [
 
 export type StickerStyle = (typeof STICKER_STYLES)[number]
 
+export const STICKER_SEASONS = ['off', 'advent'] as const
+
+export type StickerSeason = (typeof STICKER_SEASONS)[number]
+
+const ADVENT = { monthIndex: 11, lastDay: 24 } as const
+
 export const STICKER_TITLE_MAX_LENGTH = 24
 
 export type StickerOptions = {
@@ -27,6 +33,7 @@ export type StickerOptions = {
   showsDate: boolean
   ink: StickerInk
   style: StickerStyle
+  season: StickerSeason
 }
 
 export type StickerStat = {
@@ -41,8 +48,16 @@ export type StickerData = {
   hero: StickerStat
   stats: StickerStat[]
   date: string | null
+  badge: string | null
   ink: StickerInk
   style: StickerStyle
+}
+
+export function seasonBadge({ season, date }: { season: StickerSeason; date: Date }) {
+  if (season === 'off') return null
+  const day = date.getDate()
+  const isAdventDay = date.getMonth() === ADVENT.monthIndex && day <= ADVENT.lastDay
+  return isAdventDay ? `Advent · Day ${day}` : 'Advent'
 }
 
 export function statLabel({ stat, activity }: { stat: StatKey; activity: ActivityType }) {
@@ -120,6 +135,7 @@ export function buildStickerData({
       .filter((stat) => stat !== null)
       .slice(0, MAX_SECONDARY_STATS),
     date: options.showsDate ? formatDate(workout.date) : null,
+    badge: seasonBadge({ season: options.season, date: workout.date }),
     ink: options.ink,
     style: options.style,
   }

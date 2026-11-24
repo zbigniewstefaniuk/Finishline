@@ -66,7 +66,12 @@ src/styles.css        the preset's tokens (dark via prefers-color-scheme) and th
   new pace style, `PACE_STYLES` (`src/domain/pace.ts`). Optionally add its keywords to
   `ACTIVITY_KEYWORDS` (`src/domain/workout-scan.ts`) so screenshots detect it. New layout style: a sibling of
   `minimal-sticker.ts` that takes `StickerData`, added to `STICKER_STYLES`
-  (`src/domain/sticker-data.ts`) and `STICKER_LAYOUTS` (`src/sticker/render-sticker.ts`).
+  (`src/domain/sticker-data.ts`) and `STICKER_LAYOUTS` (`src/sticker/render-sticker.ts`) with
+  its season badge alignment.
+- Season badge: `StickerOptions.season` (`STICKER_SEASONS`, only Advent so far) becomes
+  `StickerData.badge` via `seasonBadge` (Advent counts Day 1–24 from the workout date).
+  `withSeasonBadge` (`src/sticker/season-badge.ts`) wraps any layout: it adds the snow-capped
+  badge on top, shifts the layout down and scatters snowflakes in the widened margins.
 - Screenshot import: `readScreenshotLines` runs Tesseract in sparse-text mode, then
   `splitOcrColumns` (`src/domain/ocr-columns.ts`) splits lines that merged neighbouring grid
   columns; `parseWorkoutScan` turns the phrases into a `WorkoutScan` for the reducer's

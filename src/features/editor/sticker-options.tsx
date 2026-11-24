@@ -13,12 +13,14 @@ import { ACTIVITIES, type ActivityType } from '~/domain/activity'
 import { formatList } from '~/domain/format'
 import {
   STICKER_INKS,
+  STICKER_SEASONS,
   STICKER_STYLES,
   STICKER_TITLE_MAX_LENGTH,
   describeStat,
   statLabel,
   type StickerInk,
   type StickerOptions,
+  type StickerSeason,
   type StickerStyle,
 } from '~/domain/sticker-data'
 import { MAX_SECONDARY_STATS, statsFor, type Workout } from '~/domain/workout'
@@ -32,6 +34,11 @@ const INK_LABELS = {
   light: 'Light',
   dark: 'Dark',
 } as const satisfies Record<StickerInk, string>
+
+export const SEASON_LABELS = {
+  off: 'Off',
+  advent: 'Advent',
+} as const satisfies Record<StickerSeason, string>
 
 export const STYLE_LABELS = {
   minimal: 'Minimal',
@@ -158,13 +165,22 @@ export function StickerOptionsSection({
           onKeyDown={blurOnEnter}
         />
       </FieldRow>
-      <FieldRow label="Ink" hasSeparator={false}>
+      <FieldRow label="Ink" hasSeparator>
         <ChoiceChips
           values={STICKER_INKS}
           labels={INK_LABELS}
           value={options.ink}
           label="Sticker ink"
           onChange={(ink) => dispatch({ type: 'set-ink', ink })}
+        />
+      </FieldRow>
+      <FieldRow label="Season" hasSeparator={false}>
+        <ChoiceChips
+          values={STICKER_SEASONS}
+          labels={SEASON_LABELS}
+          value={options.season}
+          label="Season badge"
+          onChange={(season) => dispatch({ type: 'set-season', season })}
         />
       </FieldRow>
     </FieldSet>
