@@ -1,6 +1,5 @@
 import { useState, type Dispatch } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '~/components/ui/toggle-group'
-import { STICKER_STYLES, type StickerStyle } from '~/domain/sticker-data'
 import { cn } from '~/lib/utils'
 import type { StickerImage } from '~/sticker/render-sticker'
 import {
@@ -8,8 +7,7 @@ import {
   type EditorAction,
   type PreviewBackground,
 } from './editor-state'
-import { entrySide, swipedStyle, type EntrySide } from './preview-gestures'
-import { STYLE_LABELS } from './sticker-options'
+import { entrySide, type EntrySide } from './preview-gestures'
 import { usePreviewGestures } from './use-preview-gestures'
 
 const BACKGROUND_LABELS = {
@@ -17,41 +15,47 @@ const BACKGROUND_LABELS = {
   light: 'Light',
 } as const satisfies Record<PreviewBackground, string>
 
+export type PreviewPager = {
+  label: string
+  pages: { key: string; label: string }[]
+  current: string
+}
+
 export function PreviewStage({
   image,
-  renderedStyle,
-  stickerStyle,
-  hasWorkout,
+  renderedPage,
+  pager,
+  isEmpty,
   background,
   dispatch,
   onLongPress,
 }: {
   image: StickerImage | null
-  renderedStyle: StickerStyle | null
-  stickerStyle: StickerStyle
-  hasWorkout: boolean
+  renderedPage: string | null
+  pager: PreviewPager
+  isEmpty: boolean
   background: PreviewBackground
   dispatch: Dispatch<EditorAction>
   onLongPress: () => void
 }) {
   const otherBackground = PREVIEW_BACKGROUNDS.find((key) => key !== background)
   const [entry, setEntry] = useState<{
-    style: StickerStyle | null
+    page: string | null
     side: EntrySide | null
-  }>({ style: renderedStyle, side: null })
-  if (renderedStyle !== entry.style) {
+  }>({ page: renderedPage, side: null })
+  if (renderedPage !== entry.page) {
     setEntry({
-      style: renderedStyle,
-      side: entrySide({ from: entry.style, to: renderedStyle }),
+      page: renderedPage,
+      side: entrySide({
+        pages: pager.pages.map((page) => page.key),
+        from: entry.page,
+        to: renderedPage,
+      }),
     })
   }
-  const isSwitchingStyle = image !== null && renderedStyle !== stickerStyle
+  const isSwitchingPage = image !== null && renderedPage !== pager.current
   const gestures = usePreviewGestures({
-    onSwipe: (gesture) =>
-      dispatch({
-        type: 'set-style',
-        style: swipedStyle({ style: stickerStyle, gesture }),
-      }),
+    onSwipe: (gesture) => dispatch({ type: 'swipe-preview', gesture }),
     onDoubleTap: () => {
       if (otherBackground)
         dispatch({ type: 'set-background', background: otherBackground })
@@ -74,16 +78,16 @@ export function PreviewStage({
           className={cn(
             'absolute inset-x-6 top-6 bottom-16 flex items-center justify-center',
             gestures.dragX === 0 &&
-              !isSwitchingStyle &&
+              !isSwitchingPage &&
               'transition-transform duration-200',
           )}
           style={{
             transform: `translateX(${gestures.dragX}px) scale(${gestures.isHolding ? 0.96 : 1})`,
           }}
         >
-          {image && !isSwitchingStyle ? (
+          {image && !isSwitchingPage ? (
             <img
-              key={renderedStyle}
+              key={renderedPage}
               src={image.url}
               width={image.width}
               height={image.height}
@@ -96,31 +100,31 @@ export function PreviewStage({
               )}
             />
           ) : null}
-          {hasWorkout ? null : (
+          {isEmpty ? (
             <p className="text-center text-[15px] leading-relaxed whitespace-pre-line text-(--pill-muted)">
               {'Enter a distance and time,\nor upload a screenshot.'}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
       <div
         role="group"
-        aria-label="Sticker style"
+        aria-label={pager.label}
         className="absolute top-0.75 left-1/2 flex -translate-x-1/2"
       >
-        {STICKER_STYLES.map((style) => (
+        {pager.pages.map((page, index) => (
           <button
-            key={style}
+            key={page.key}
             type="button"
-            aria-label={STYLE_LABELS[style]}
-            aria-pressed={style === stickerStyle}
+            aria-label={page.label}
+            aria-pressed={page.key === pager.current}
             className="group flex h-6 cursor-pointer items-center rounded-full px-0.75 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
-            onClick={() => dispatch({ type: 'set-style', style })}
+            onClick={() => dispatch({ type: 'select-preview-page', index })}
           >
             <span
               className={cn(
                 'h-1.5 w-1.5 rounded-full bg-(--pill-muted) transition-all group-hover:bg-(--pill-ink)',
-                style === stickerStyle && 'w-4 bg-(--pill-ink)',
+                page.key === pager.current && 'w-4 bg-(--pill-ink)',
               )}
             />
           </button>

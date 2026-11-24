@@ -3,6 +3,7 @@ import {
   createEditorState,
   editorReducer,
   readForm,
+  stickerSourceOf,
   type EditorAction,
   type EditorState,
 } from './editor-state'
@@ -94,6 +95,7 @@ describe('editorReducer', () => {
       ink: 'dark',
       style: 'editorial',
       season: 'advent',
+      adventCount: 'day',
     })
   })
 })
@@ -220,6 +222,7 @@ describe('start new', () => {
       ink: 'light',
       style: 'minimal',
       season: 'off',
+      adventCount: 'day',
     })
     expect(state.background).toBe('light')
     expect(state.lastWorkout).toBeNull()
@@ -287,5 +290,74 @@ describe('readForm', () => {
     const result = readForm({ ...form, distance: '' })
     expect(result.workout).toBeNull()
     expect(result.errors.distance).toBeUndefined()
+  })
+})
+
+describe('advent mode', () => {
+  const SEVENTH = new Date(2026, 11, 7)
+
+  it('turns the date into an Advent door with the picked count and ink', () => {
+    const state = apply(
+      { type: 'set-mode', mode: 'advent' },
+      { type: 'set-date', date: SEVENTH },
+      { type: 'set-ink', ink: 'dark' },
+      { type: 'set-advent-count', count: 'countdown' },
+    )
+    expect(stickerSourceOf(state)).toEqual({
+      kind: 'advent',
+      data: {
+        count: 'countdown',
+        ink: 'dark',
+        door: { top: 'Christmas in', number: '18', bottom: 'Days' },
+      },
+    })
+  })
+
+  it('needs no workout to show a sticker', () => {
+    const state = apply(
+      { type: 'set-field', field: 'distance', value: '' },
+      { type: 'set-mode', mode: 'advent' },
+    )
+    expect(stickerSourceOf(state)?.kind).toBe('advent')
+  })
+
+  it('swipes between the counts in Advent and between the styles for a workout', () => {
+    const advent = apply(
+      { type: 'set-mode', mode: 'advent' },
+      { type: 'swipe-preview', gesture: 'swipe-left' },
+      { type: 'swipe-preview', gesture: 'swipe-left' },
+    )
+    expect(advent.sticker.adventCount).toBe('countdown')
+    expect(advent.sticker.style).toBe('minimal')
+
+    const workout = apply(
+      { type: 'swipe-preview', gesture: 'swipe-right' },
+      { type: 'swipe-preview', gesture: 'swipe-left' },
+    )
+    expect(workout.sticker.style).toBe('strip')
+  })
+
+  it('picks a page from the preview dots in the current mode', () => {
+    const advent = apply(
+      { type: 'set-mode', mode: 'advent' },
+      { type: 'select-preview-page', index: 1 },
+    )
+    expect(advent.sticker.adventCount).toBe('countdown')
+    expect(advent.sticker.style).toBe('minimal')
+
+    const workout = apply({ type: 'select-preview-page', index: 2 })
+    expect(workout.sticker.style).toBe('editorial')
+  })
+
+  it('keeps the mode on New and goes back to the workout after a screenshot', () => {
+    const advent = apply({ type: 'set-mode', mode: 'advent' })
+    const started = editorReducer(advent, { type: 'start-new', today: SEVENTH })
+    expect(started.mode).toBe('advent')
+
+    const scanned = editorReducer(advent, {
+      type: 'apply-scan',
+      scan: { activity: 'run', distanceMeters: 5000, durationSeconds: 1500 },
+    })
+    expect(scanned.mode).toBe('workout')
   })
 })

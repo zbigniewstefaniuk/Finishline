@@ -1,4 +1,5 @@
-import type { StickerData, StickerStyle } from '~/domain/sticker-data'
+import type { StickerData, StickerSource, StickerStyle } from '~/domain/sticker-data'
+import { layoutAdventDoorSticker } from './advent-door-sticker'
 import { layoutBibSticker } from './bib-sticker'
 import { layoutCaptionSticker } from './caption-sticker'
 import { layoutEditorialSticker } from './editorial-sticker'
@@ -26,13 +27,18 @@ const STICKER_LAYOUTS = {
 
 export type StickerImage = { url: string; width: number; height: number }
 
-export function renderSticker(data: StickerData): StickerImage {
+function layoutWorkoutSticker(data: StickerData) {
   const { layout: layoutSticker, badgeAlign } = STICKER_LAYOUTS[data.style]
   const plain = layoutSticker(data)
+  if (data.badge === null) return plain
+  return withSeasonBadge({ layout: plain, label: data.badge, align: badgeAlign })
+}
+
+export function renderSticker(source: StickerSource): StickerImage {
   const layout =
-    data.badge === null
-      ? plain
-      : withSeasonBadge({ layout: plain, label: data.badge, align: badgeAlign })
+    source.kind === 'advent'
+      ? layoutAdventDoorSticker(source.data)
+      : layoutWorkoutSticker(source.data)
   const canvas = document.createElement('canvas')
   canvas.width = Math.ceil(layout.width * EXPORT_SCALE)
   canvas.height = Math.ceil(layout.height * EXPORT_SCALE)

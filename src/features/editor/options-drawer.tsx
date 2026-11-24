@@ -14,16 +14,25 @@ import {
 import type { ActivityType } from '~/domain/activity'
 import { statLabel, type StickerOptions } from '~/domain/sticker-data'
 import type { Workout } from '~/domain/workout'
-import type { EditorAction } from './editor-state'
-import { SEASON_LABELS, STYLE_LABELS, StickerOptionsSection } from './sticker-options'
+import type { EditorAction, EditorMode } from './editor-state'
+import {
+  AdventOptionsSection,
+  INK_LABELS,
+  SEASON_LABELS,
+  STYLE_LABELS,
+  StickerOptionsSection,
+} from './sticker-options'
 
 function summaryOf({
+  mode,
   options,
   activity,
 }: {
+  mode: EditorMode
   options: StickerOptions
   activity: ActivityType
 }) {
+  if (mode === 'advent') return `${INK_LABELS[options.ink]} ink`
   const stats = options.stats.map((stat) => statLabel({ stat, activity }))
   const shown = options.showsDate ? [...stats, 'Date'] : stats
   const details = shown.length > 0 ? shown.join(', ') : 'No stats'
@@ -32,11 +41,13 @@ function summaryOf({
 }
 
 export function OptionsDrawer({
+  mode,
   options,
   activity,
   workout,
   dispatch,
 }: {
+  mode: EditorMode
   options: StickerOptions
   activity: ActivityType
   workout: Workout | null
@@ -62,7 +73,7 @@ export function OptionsDrawer({
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-medium">Sticker options</span>
             <span className="truncate text-sm text-muted-foreground">
-              {summaryOf({ options, activity })}
+              {summaryOf({ mode, options, activity })}
             </span>
           </span>
           <RiArrowUpSLine aria-hidden="true" className="size-5 text-muted-foreground" />
@@ -73,12 +84,16 @@ export function OptionsDrawer({
           <DrawerTitle>Sticker options</DrawerTitle>
         </DrawerHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4">
-          <StickerOptionsSection
-            options={options}
-            activity={activity}
-            workout={workout}
-            dispatch={dispatch}
-          />
+          {mode === 'advent' ? (
+            <AdventOptionsSection ink={options.ink} dispatch={dispatch} />
+          ) : (
+            <StickerOptionsSection
+              options={options}
+              activity={activity}
+              workout={workout}
+              dispatch={dispatch}
+            />
+          )}
         </div>
         <DrawerFooter className="pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <DrawerClose render={<Button size="lg" className="h-12 text-base" />}>

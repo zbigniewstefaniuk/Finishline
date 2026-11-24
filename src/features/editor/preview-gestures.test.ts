@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { ADVENT_COUNTS } from '~/domain/advent'
+import { STICKER_STYLES } from '~/domain/sticker-data'
 import {
   classifyGesture,
   entrySide,
   isDoubleTap,
   isHorizontalWheel,
-  swipedStyle,
   wheelSwipe,
 } from './preview-gestures'
 
@@ -60,18 +61,6 @@ describe('isDoubleTap', () => {
   })
 })
 
-describe('swipedStyle', () => {
-  it('moves to the next style on a left swipe and back on a right swipe', () => {
-    expect(swipedStyle({ style: 'minimal', gesture: 'swipe-left' })).toBe('strip')
-    expect(swipedStyle({ style: 'strip', gesture: 'swipe-right' })).toBe('minimal')
-  })
-
-  it('stays put at either end', () => {
-    expect(swipedStyle({ style: 'minimal', gesture: 'swipe-right' })).toBe('minimal')
-    expect(swipedStyle({ style: 'bib', gesture: 'swipe-left' })).toBe('bib')
-  })
-})
-
 describe('isHorizontalWheel', () => {
   it('takes a sideways trackpad swipe and leaves vertical scrolling to the page', () => {
     expect(isHorizontalWheel({ deltaX: 12, deltaY: 2 })).toBe(true)
@@ -89,13 +78,19 @@ describe('wheelSwipe', () => {
 })
 
 describe('entrySide', () => {
+  const pages = STICKER_STYLES
+
   it('brings a later style in from the right and an earlier one from the left', () => {
-    expect(entrySide({ from: 'minimal', to: 'editorial' })).toBe('right')
-    expect(entrySide({ from: 'bib', to: 'grid' })).toBe('left')
+    expect(entrySide({ pages, from: 'minimal', to: 'editorial' })).toBe('right')
+    expect(entrySide({ pages, from: 'bib', to: 'grid' })).toBe('left')
   })
 
   it('has no side for the first sticker or the same style', () => {
-    expect(entrySide({ from: null, to: 'minimal' })).toBeNull()
-    expect(entrySide({ from: 'strip', to: 'strip' })).toBeNull()
+    expect(entrySide({ pages, from: null, to: 'minimal' })).toBeNull()
+    expect(entrySide({ pages, from: 'strip', to: 'strip' })).toBeNull()
+  })
+
+  it('has no side when the mode changes under it', () => {
+    expect(entrySide({ pages: ADVENT_COUNTS, from: 'minimal', to: 'day' })).toBeNull()
   })
 })

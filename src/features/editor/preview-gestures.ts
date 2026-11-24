@@ -1,5 +1,3 @@
-import { STICKER_STYLES, type StickerStyle } from '~/domain/sticker-data'
-
 export type PointerSample = { x: number; y: number; time: number }
 
 export type PreviewGesture = 'swipe-left' | 'swipe-right' | 'long-press' | 'tap' | 'none'
@@ -78,27 +76,18 @@ export function isDoubleTap({
   return isQuick && isClose
 }
 
-export function swipedStyle({
-  style,
-  gesture,
-}: {
-  style: StickerStyle
-  gesture: SwipeGesture
-}) {
-  const step = gesture === 'swipe-left' ? 1 : -1
-  const index = STICKER_STYLES.indexOf(style) + step
-  return STICKER_STYLES[index] ?? style
-}
-
 export function entrySide({
+  pages,
   from,
   to,
 }: {
-  from: StickerStyle | null
-  to: StickerStyle | null
+  pages: readonly string[]
+  from: string | null
+  to: string | null
 }): EntrySide | null {
-  if (!from || !to) return null
-  const step = STICKER_STYLES.indexOf(to) - STICKER_STYLES.indexOf(from)
-  if (step === 0) return null
-  return step > 0 ? 'right' : 'left'
+  const fromIndex = from === null ? -1 : pages.indexOf(from)
+  const toIndex = to === null ? -1 : pages.indexOf(to)
+  const isSamePager = fromIndex >= 0 && toIndex >= 0
+  if (!isSamePager || fromIndex === toIndex) return null
+  return toIndex > fromIndex ? 'right' : 'left'
 }

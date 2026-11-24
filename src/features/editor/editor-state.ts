@@ -1,11 +1,15 @@
 import { ACTIVITIES, type ActivityType } from '~/domain/activity'
+import { ADVENT_COUNTS, adventDoor, type AdventCount } from '~/domain/advent'
 import { formatClock, formatDistanceInput } from '~/domain/format'
 import { parseDistanceMeters, parseDuration, parseWholeNumber } from '~/domain/parse'
-import type {
-  StickerInk,
-  StickerOptions,
-  StickerSeason,
-  StickerStyle,
+import {
+  STICKER_STYLES,
+  buildStickerData,
+  type StickerInk,
+  type StickerOptions,
+  type StickerSeason,
+  type StickerSource,
+  type StickerStyle,
 } from '~/domain/sticker-data'
 import {
   MAX_SECONDARY_STATS,
@@ -14,10 +18,15 @@ import {
   type Workout,
 } from '~/domain/workout'
 import type { WorkoutScan } from '~/domain/workout-scan'
+import type { SwipeGesture } from './preview-gestures'
 
 export const PREVIEW_BACKGROUNDS = ['dark', 'light'] as const
 
 export type PreviewBackground = (typeof PREVIEW_BACKGROUNDS)[number]
+
+export const EDITOR_MODES = ['workout', 'advent'] as const
+
+export type EditorMode = (typeof EDITOR_MODES)[number]
 
 export type TextField = 'distance' | 'time' | 'heartRate' | 'calories' | 'elevation'
 
@@ -45,6 +54,7 @@ export type EditorNotice =
   | { kind: 'started-new'; previous: Snapshot }
 
 export type EditorState = {
+  mode: EditorMode
   form: EditorForm
   sticker: StickerOptions
   background: PreviewBackground
@@ -62,6 +72,10 @@ export type EditorAction =
   | { type: 'set-ink'; ink: StickerInk }
   | { type: 'set-style'; style: StickerStyle }
   | { type: 'set-season'; season: StickerSeason }
+  | { type: 'set-advent-count'; count: AdventCount }
+  | { type: 'swipe-preview'; gesture: SwipeGesture }
+  | { type: 'select-preview-page'; index: number }
+  | { type: 'set-mode'; mode: EditorMode }
   | { type: 'set-background'; background: PreviewBackground }
   | { type: 'apply-scan'; scan: WorkoutScan }
   | { type: 'start-new'; today: Date }
@@ -70,7 +84,15 @@ export type EditorAction =
 
 type EditAction = Exclude<
   EditorAction,
-  { type: 'set-background' | 'apply-scan' | 'start-new' | 'undo' | 'dismiss-notice' }
+  {
+    type:
+      | 'set-mode'
+      | 'set-background'
+      | 'apply-scan'
+      | 'start-new'
+      | 'undo'
+      | 'dismiss-notice'
+  }
 >
 
 export type FieldErrors = Partial<Record<TextField, string>>
@@ -90,6 +112,7 @@ const DEFAULT_STICKER: StickerOptions = {
   ink: 'light',
   style: 'minimal',
   season: 'off',
+  adventCount: 'day',
 }
 
 const FILL_ORDER: FilledField[] = [
@@ -183,12 +206,52 @@ function blankForm(today: Date): EditorForm {
 export function createEditorState(today = new Date()): EditorState {
   const form: EditorForm = { ...blankForm(today), distance: '1250', time: '49:05' }
   return {
+    mode: 'workout',
     form,
     sticker: DEFAULT_STICKER,
     background: 'dark',
     lastWorkout: readForm(form).workout,
     notice: null,
   }
+}
+
+export function stickerSourceOf({
+  mode,
+  form,
+  sticker,
+  lastWorkout,
+}: EditorState): StickerSource | null {
+  if (mode === 'advent') {
+    const { adventCount: count, ink } = sticker
+    return {
+      kind: 'advent',
+      data: { count, ink, door: adventDoor({ count, date: form.date }) },
+    }
+  }
+  if (!lastWorkout) return null
+  return {
+    kind: 'workout',
+    data: buildStickerData({ workout: lastWorkout, options: sticker }),
+  }
+}
+
+function previewPageIndex({ mode, sticker }: EditorState) {
+  if (mode === 'advent') return ADVENT_COUNTS.indexOf(sticker.adventCount)
+  return STICKER_STYLES.indexOf(sticker.style)
+}
+
+function selectPreviewPage({
+  state,
+  index,
+}: {
+  state: EditorState
+  index: number
+}): StickerOptions {
+  const { sticker } = state
+  if (state.mode === 'advent') {
+    return { ...sticker, adventCount: ADVENT_COUNTS[index] ?? sticker.adventCount }
+  }
+  return { ...sticker, style: STICKER_STYLES[index] ?? sticker.style }
 }
 
 function snapshotOf({ form, sticker, lastWorkout }: EditorState): Snapshot {
@@ -277,12 +340,14 @@ function applyScan({ state, scan }: { state: EditorState; scan: WorkoutScan }) {
       state: { ...state, sticker: switched.sticker },
       form: { ...switched.form, ...values },
     }),
+    mode: 'workout',
     notice: { kind: 'filled', fields, previous: snapshotOf(state) },
   } satisfies EditorState
 }
 
 function startNew({ state, today }: { state: EditorState; today: Date }): EditorState {
   return {
+    mode: state.mode,
     form: blankForm(today),
     sticker: DEFAULT_STICKER,
     background: state.background,
@@ -338,11 +403,25 @@ function edit({
     case 'set-season': {
       return { ...state, sticker: { ...state.sticker, season: action.season } }
     }
+    case 'set-advent-count': {
+      return { ...state, sticker: { ...state.sticker, adventCount: action.count } }
+    }
+    case 'swipe-preview': {
+      const step = action.gesture === 'swipe-left' ? 1 : -1
+      const index = previewPageIndex(state) + step
+      return { ...state, sticker: selectPreviewPage({ state, index }) }
+    }
+    case 'select-preview-page': {
+      return { ...state, sticker: selectPreviewPage({ state, index: action.index }) }
+    }
   }
 }
 
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
+    case 'set-mode': {
+      return { ...state, mode: action.mode }
+    }
     case 'set-background': {
       return { ...state, background: action.background }
     }
@@ -366,7 +445,10 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case 'set-title':
     case 'set-ink':
     case 'set-style':
-    case 'set-season': {
+    case 'set-season':
+    case 'set-advent-count':
+    case 'swipe-preview':
+    case 'select-preview-page': {
       return { ...edit({ state, action }), notice: null }
     }
   }
