@@ -1,4 +1,5 @@
 import { ACTIVITIES, type ActivityType } from './activity'
+import { adventDay, type AdventCount, type AdventDoor } from './advent'
 import { formatClock, formatDate, formatDistance, formatGrouped } from './format'
 import { formatPace, paceStyleOf } from './pace'
 import { MAX_SECONDARY_STATS, STAT_KEYS, type StatKey, type Workout } from './workout'
@@ -23,8 +24,6 @@ export const STICKER_SEASONS = ['off', 'advent'] as const
 
 export type StickerSeason = (typeof STICKER_SEASONS)[number]
 
-const ADVENT = { monthIndex: 11, lastDay: 24 } as const
-
 export const STICKER_TITLE_MAX_LENGTH = 24
 
 export type StickerOptions = {
@@ -34,6 +33,7 @@ export type StickerOptions = {
   ink: StickerInk
   style: StickerStyle
   season: StickerSeason
+  adventCount: AdventCount
 }
 
 export type StickerStat = {
@@ -53,11 +53,20 @@ export type StickerData = {
   style: StickerStyle
 }
 
+export type AdventStickerData = {
+  count: AdventCount
+  door: AdventDoor
+  ink: StickerInk
+}
+
+export type StickerSource =
+  | { kind: 'workout'; data: StickerData }
+  | { kind: 'advent'; data: AdventStickerData }
+
 export function seasonBadge({ season, date }: { season: StickerSeason; date: Date }) {
   if (season === 'off') return null
-  const day = date.getDate()
-  const isAdventDay = date.getMonth() === ADVENT.monthIndex && day <= ADVENT.lastDay
-  return isAdventDay ? `Advent · Day ${day}` : 'Advent'
+  const day = adventDay(date)
+  return day === null ? 'Advent' : `Advent · Day ${day}`
 }
 
 export function statLabel({ stat, activity }: { stat: StatKey; activity: ActivityType }) {

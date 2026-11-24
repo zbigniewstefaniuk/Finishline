@@ -30,7 +30,7 @@ import { FieldRow, blurOnEnter } from './field-row'
 
 const STICKER_TITLE_INPUT_ID = 'sticker-title'
 
-const INK_LABELS = {
+export const INK_LABELS = {
   light: 'Light',
   dark: 'Dark',
 } as const satisfies Record<StickerInk, string>
@@ -79,6 +79,42 @@ function Chip({
       {isPicked ? <RiCheckLine aria-hidden="true" /> : null}
       {label}
     </Toggle>
+  )
+}
+
+function InkField({
+  ink,
+  hasSeparator,
+  dispatch,
+}: {
+  ink: StickerInk
+  hasSeparator: boolean
+  dispatch: Dispatch<EditorAction>
+}) {
+  return (
+    <FieldRow label="Ink" hasSeparator={hasSeparator}>
+      <ChoiceChips
+        values={STICKER_INKS}
+        labels={INK_LABELS}
+        value={ink}
+        label="Sticker ink"
+        onChange={(picked) => dispatch({ type: 'set-ink', ink: picked })}
+      />
+    </FieldRow>
+  )
+}
+
+export function AdventOptionsSection({
+  ink,
+  dispatch,
+}: {
+  ink: StickerInk
+  dispatch: Dispatch<EditorAction>
+}) {
+  return (
+    <FieldSet className="mt-5 gap-0">
+      <InkField ink={ink} hasSeparator={false} dispatch={dispatch} />
+    </FieldSet>
   )
 }
 
@@ -165,15 +201,7 @@ export function StickerOptionsSection({
           onKeyDown={blurOnEnter}
         />
       </FieldRow>
-      <FieldRow label="Ink" hasSeparator>
-        <ChoiceChips
-          values={STICKER_INKS}
-          labels={INK_LABELS}
-          value={options.ink}
-          label="Sticker ink"
-          onChange={(ink) => dispatch({ type: 'set-ink', ink })}
-        />
-      </FieldRow>
+      <InkField ink={options.ink} hasSeparator dispatch={dispatch} />
       <FieldRow label="Season" hasSeparator={false}>
         <ChoiceChips
           values={STICKER_SEASONS}

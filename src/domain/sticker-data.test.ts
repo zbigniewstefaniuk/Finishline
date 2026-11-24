@@ -20,6 +20,7 @@ function options(overrides: Partial<StickerOptions> = {}): StickerOptions {
     ink: 'light',
     style: 'minimal',
     season: 'off',
+    adventCount: 'day',
     ...overrides,
   }
 }

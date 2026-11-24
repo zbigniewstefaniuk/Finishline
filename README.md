@@ -24,6 +24,8 @@ screenshots are read on your device, nothing is uploaded.
 
 - **7 layouts**: minimal, strip, editorial, grid, stack, caption, race bib
 - **Season badge**: Advent adds a snow-capped "Advent · Day N" badge and falling snow
+- **Advent mode**: a sport-free sticker, a snowy calendar door with the Advent day or a
+  countdown to Christmas
 - **9 sports**: run, trail run, walk, hike, ride, ski, row, pool swim, open water
 - **The right pace per sport**: `/km`, `/100m`, `/500m` split or `km/h`
 - **Screenshot import** with on-device OCR (Tesseract.js, loaded on first use)
