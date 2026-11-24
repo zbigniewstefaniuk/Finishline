@@ -1,7 +1,12 @@
 import { ACTIVITIES, type ActivityType } from '~/domain/activity'
 import { formatClock, formatDistanceInput } from '~/domain/format'
 import { parseDistanceMeters, parseDuration, parseWholeNumber } from '~/domain/parse'
-import type { StickerInk, StickerOptions, StickerStyle } from '~/domain/sticker-data'
+import type {
+  StickerInk,
+  StickerOptions,
+  StickerSeason,
+  StickerStyle,
+} from '~/domain/sticker-data'
 import {
   MAX_SECONDARY_STATS,
   statsFor,
@@ -56,6 +61,7 @@ export type EditorAction =
   | { type: 'set-title'; title: string }
   | { type: 'set-ink'; ink: StickerInk }
   | { type: 'set-style'; style: StickerStyle }
+  | { type: 'set-season'; season: StickerSeason }
   | { type: 'set-background'; background: PreviewBackground }
   | { type: 'apply-scan'; scan: WorkoutScan }
   | { type: 'start-new'; today: Date }
@@ -83,6 +89,7 @@ const DEFAULT_STICKER: StickerOptions = {
   showsDate: true,
   ink: 'light',
   style: 'minimal',
+  season: 'off',
 }
 
 const FILL_ORDER: FilledField[] = [
@@ -328,6 +335,9 @@ function edit({
     case 'set-style': {
       return { ...state, sticker: { ...state.sticker, style: action.style } }
     }
+    case 'set-season': {
+      return { ...state, sticker: { ...state.sticker, season: action.season } }
+    }
   }
 }
 
@@ -355,7 +365,8 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case 'toggle-date':
     case 'set-title':
     case 'set-ink':
-    case 'set-style': {
+    case 'set-style':
+    case 'set-season': {
       return { ...edit({ state, action }), notice: null }
     }
   }

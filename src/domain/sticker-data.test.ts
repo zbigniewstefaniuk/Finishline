@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildStickerData, type StickerOptions } from './sticker-data'
+import { buildStickerData, seasonBadge, type StickerOptions } from './sticker-data'
 import type { StatKey, Workout } from './workout'
 
 function workout(overrides: Partial<Workout> = {}): Workout {
@@ -19,6 +19,7 @@ function options(overrides: Partial<StickerOptions> = {}): StickerOptions {
     showsDate: true,
     ink: 'light',
     style: 'minimal',
+    season: 'off',
     ...overrides,
   }
 }
@@ -41,6 +42,7 @@ describe('buildStickerData', () => {
         { value: '3:56', unit: '/100m', label: 'Pace' },
       ],
       date: '22.11.2026',
+      badge: null,
       ink: 'light',
       style: 'minimal',
     })
@@ -115,5 +117,33 @@ describe('buildStickerData', () => {
     expect(data.date).toBeNull()
     expect(data.ink).toBe('dark')
     expect(data.style).toBe('strip')
+  })
+})
+
+describe('seasonBadge', () => {
+  it('shows no badge when the season is off', () => {
+    expect(seasonBadge({ season: 'off', date: new Date(2026, 11, 7) })).toBeNull()
+  })
+
+  it('counts the Advent day from 1 to 24 December', () => {
+    expect(seasonBadge({ season: 'advent', date: new Date(2026, 11, 1) })).toBe(
+      'Advent · Day 1',
+    )
+    expect(seasonBadge({ season: 'advent', date: new Date(2026, 11, 24) })).toBe(
+      'Advent · Day 24',
+    )
+  })
+
+  it('drops the day outside Advent', () => {
+    expect(seasonBadge({ season: 'advent', date: new Date(2026, 11, 25) })).toBe('Advent')
+    expect(seasonBadge({ season: 'advent', date: new Date(2026, 10, 30) })).toBe('Advent')
+  })
+
+  it('puts the badge on the sticker from the workout date, even with the date hidden', () => {
+    const data = buildStickerData({
+      workout: workout({ date: new Date(2026, 11, 7) }),
+      options: options({ season: 'advent', showsDate: false }),
+    })
+    expect(data.badge).toBe('Advent · Day 7')
   })
 })

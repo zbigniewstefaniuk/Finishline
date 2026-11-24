@@ -15,7 +15,7 @@ import type { ActivityType } from '~/domain/activity'
 import { statLabel, type StickerOptions } from '~/domain/sticker-data'
 import type { Workout } from '~/domain/workout'
 import type { EditorAction } from './editor-state'
-import { STYLE_LABELS, StickerOptionsSection } from './sticker-options'
+import { SEASON_LABELS, STYLE_LABELS, StickerOptionsSection } from './sticker-options'
 
 function summaryOf({
   options,
@@ -27,7 +27,8 @@ function summaryOf({
   const stats = options.stats.map((stat) => statLabel({ stat, activity }))
   const shown = options.showsDate ? [...stats, 'Date'] : stats
   const details = shown.length > 0 ? shown.join(', ') : 'No stats'
-  return `${STYLE_LABELS[options.style]} · ${details}`
+  const season = options.season === 'off' ? [] : [SEASON_LABELS[options.season]]
+  return [STYLE_LABELS[options.style], ...season, details].join(' · ')
 }
 
 export function OptionsDrawer({

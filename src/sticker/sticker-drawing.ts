@@ -60,6 +60,16 @@ export type Block =
       radius: number
       lineWidth: number
     }
+  | { kind: 'fill-path'; id: string; x: number; y: number; d: string; opacity: number }
+  | {
+      kind: 'stroke-path'
+      id: string
+      x: number
+      y: number
+      d: string
+      opacity: number
+      lineWidth: number
+    }
 
 export type StickerLayout = {
   width: number
@@ -243,6 +253,25 @@ export function drawSticker({
         context.beginPath()
         context.roundRect(block.x, block.y, block.width, block.height, block.radius)
         context.stroke()
+        break
+      }
+      case 'fill-path': {
+        context.save()
+        context.translate(block.x, block.y)
+        context.globalAlpha = block.opacity
+        context.fill(new Path2D(block.d))
+        context.restore()
+        break
+      }
+      case 'stroke-path': {
+        context.save()
+        context.translate(block.x, block.y)
+        context.lineWidth = block.lineWidth
+        context.lineCap = 'round'
+        context.lineJoin = 'round'
+        context.globalAlpha = block.opacity
+        context.stroke(new Path2D(block.d))
+        context.restore()
         break
       }
     }
